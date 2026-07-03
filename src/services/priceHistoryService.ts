@@ -1,21 +1,23 @@
-import {
-  collection,
-  doc,
-  addDoc,
-  updateDoc,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit,
-  Timestamp,
-} from 'firebase/firestore';
-import { db } from '../config/firebase';
-import { ProductPriceHistory, PriceRecord, PriceVariation } from '../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { PriceVariation } from '../types';
 
-const COLLECTION = 'price_history';
+const HISTORY_KEY = '@marketbudget:price_history';
 
-// Normaliza o nome do produto para uso como chave de busca
+// ─── Tipos internos ───────────────────────────────────────────────────────────
+
+export interface StoredRecord {
+  date: string; // ISO string
+  unitPrice: number;
+  sessionId: string;
+}
+
+interface StoredHistory {
+  [normalizedName: string]: StoredRecord[];
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Normaliza o nome do produto: minúsculas e sem acentos */
 export const normalizeName = (name: string): string =>
   name
     .toLowerCase()
@@ -23,94 +25,118 @@ export const normalizeName = (name: string): string =>
     .replace(/[\u0300-\u036f]/g, '')
     .trim();
 
-// Busca o preço mais recente do produto para comparação
-export async function getLastPrice(
-  productName: string,
-  userId: string
-): Promise<PriceRecord | null> {
-  const normalized = normalizeName(productName);
-
-  const q = query(
-    collection(db, COLLECTION),
-    where('productName', '==', normalized),
-    where('userId', '==', userId),
-    orderBy('date', 'desc'),
-    limit(1)
-  );
-
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
-
-  const data = snap.docs[0].data();
-  // Pega o registro mais recente dentro do array
-  if (!data.records || data.records.length === 0) return null;
-
-  const sorted = [...data.records].sort(
-    (a, b) => b.date.toMillis() - a.date.toMillis()
-  );
-  return {
-    date: sorted[0].date.toDate(),
-    unitPrice: sorted[0].unitPrice,
-    sessionId: sorted[0].sessionId,
-  };
+async function loadHistory(): Promise<StoredHistory> {
+  try {
+    const raw = await AsyncStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
 }
 
-// Calcula a variação percentual em relação ao preço anterior
+async function saveHistory(history: StoredHistory): Promise<void> {
+  await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+// ─── API Pública ──────────────────────────────────────────────────────────────
+
+/**
+ * Retorna a variação percentual do produto em relação à última compra.
+ * Retorna null se não houver histórico ou variação insignificante.
+ */
 export async function getPriceVariation(
   productName: string,
-  currentPrice: number,
-  userId: string
+  currentPrice: number
 ): Promise<PriceVariation | null> {
-  const lastRecord = await getLastPrice(productName, userId);
-  if (!lastRecord) return null;
+  const key = normalizeName(productName);
+  const history = await loadHistory();
+  const records = history[key];
 
-  const diff = currentPrice - lastRecord.unitPrice;
-  const variation = (diff / lastRecord.unitPrice) * 100;
+  if (!records || records.length === 0) return null;
 
-  if (Math.abs(variation) < 0.5) return null; // Variação insignificante
+  // Pega o registro mais recente
+  const sorted = [...records].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  const lastPrice = sorted[0].unitPrice;
+
+  const diff = currentPrice - lastPrice;
+  const variation = (diff / lastPrice) * 100;
+
+  // Ignora variações menores que 0.5%
+  if (Math.abs(variation) < 0.5) return null;
 
   return {
     percentage: Math.abs(variation).toFixed(1),
     direction: variation > 0 ? 'up' : 'down',
-    previousPrice: lastRecord.unitPrice,
+    previousPrice: lastPrice,
   };
 }
 
-// Salva ou atualiza o histórico de preços de um produto
+/**
+ * Salva um novo registro de preço para o produto.
+ * Mantém no máximo os últimos 24 registros por produto.
+ */
 export async function savePriceRecord(
   productName: string,
-  userId: string,
-  record: Omit<PriceRecord, 'date'> & { sessionId: string }
+  record: { unitPrice: number; sessionId: string }
 ): Promise<void> {
-  const normalized = normalizeName(productName);
+  const key = normalizeName(productName);
+  const history = await loadHistory();
 
-  // Verifica se já existe documento para este produto+usuário
-  const q = query(
-    collection(db, COLLECTION),
-    where('productName', '==', normalized),
-    where('userId', '==', userId)
-  );
-
-  const snap = await getDocs(q);
-
-  const newRecord = {
-    date: Timestamp.now(),
+  const existing = history[key] ?? [];
+  const newRecord: StoredRecord = {
+    date: new Date().toISOString(),
     unitPrice: record.unitPrice,
     sessionId: record.sessionId,
   };
 
-  if (snap.empty) {
-    // Cria novo documento
-    await addDoc(collection(db, COLLECTION), {
-      productName: normalized,
-      userId,
-      records: [newRecord],
-    });
-  } else {
-    // Adiciona ao array existente (mantém histórico dos últimos 12 meses)
-    const docRef = snap.docs[0].ref;
-    const existingRecords = snap.docs[0].data().records ?? [];
-    const updatedRecords = [...existingRecords, newRecord].slice(-24); // mantém 24 registros
-    await updateDoc(docRef, { records: updatedRecords });
+  // Mantém os últimos 24 registros
+  history[key] = [...existing, newRecord].slice(-24);
+  await saveHistory(history);
+}
+
+/** Retorna todo o histórico de um produto (para gráficos futuros) */
+export async function getProductHistory(
+  productName: string
+): Promise<StoredRecord[]> {
+  const key = normalizeName(productName);
+  const history = await loadHistory();
+  return (history[key] ?? []).sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+}
+
+/** Retorna a lista de nomes normalizados de todos os produtos com histórico */
+export async function getAllTrackedProducts(): Promise<string[]> {
+  const history = await loadHistory();
+  return Object.keys(history).sort();
+}
+
+/** Apaga todo o histórico de preços (útil para testes) */
+export async function clearAllHistory(): Promise<void> {
+  await AsyncStorage.removeItem(HISTORY_KEY);
+}
+
+/** Apaga os registros de preço vinculados a uma sessão específica */
+export async function removeRecordsForSession(sessionId: string): Promise<void> {
+  const history = await loadHistory();
+  let changed = false;
+
+  for (const product of Object.keys(history)) {
+    const originalLen = history[product].length;
+    history[product] = history[product].filter(r => r.sessionId !== sessionId);
+    
+    // Se a array ficou vazia, remove a chave para limpar
+    if (history[product].length === 0) {
+      delete history[product];
+      changed = true;
+    } else if (history[product].length !== originalLen) {
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    await saveHistory(history);
   }
 }

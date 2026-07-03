@@ -14,10 +14,13 @@ interface ShoppingStore {
 
   // Item actions
   addItem: (item: Omit<ShoppingItem, 'id' | 'actualQty' | 'unitPrice' | 'totalPrice' | 'addedToCart' | 'priceVariation'>) => void;
+  editItem: (id: string, updates: Partial<Omit<ShoppingItem, 'id' | 'actualQty' | 'unitPrice' | 'totalPrice' | 'addedToCart' | 'priceVariation'>>) => void;
   removeItem: (id: string) => void;
-  updateItemInMarket: (id: string, actualQty: number, unitPrice: number) => void;
+  updateItemInMarket: (id: string, actualQty: number, unitPrice: number, reason?: string) => void;
   updateItemPriceVariation: (id: string, variation: ShoppingItem['priceVariation']) => void;
   toggleItemCart: (id: string) => void;
+  // Reseta os itens para o estado de lista prévia (apaga preços/qtds do mercado)
+  resetItemsToPreList: () => void;
 }
 
 const recalcTotalSpent = (items: ShoppingItem[]) => {
@@ -79,12 +82,20 @@ export const useShoppingStore = create<ShoppingStore>((set, get) => ({
     });
   },
 
-  updateItemInMarket: (id, actualQty, unitPrice) => {
+  editItem: (id, updates) => {
+    set((state) => ({
+      items: state.items.map((item) =>
+        item.id === id ? { ...item, ...updates } : item
+      ),
+    }));
+  },
+
+  updateItemInMarket: (id, actualQty, unitPrice, reason) => {
     set((state) => {
       const items = state.items.map((item) => {
         if (item.id !== id) return item;
         const totalPrice = parseFloat((actualQty * unitPrice).toFixed(2));
-        return { ...item, actualQty, unitPrice, totalPrice, addedToCart: true };
+        return { ...item, actualQty, unitPrice, totalPrice, addedToCart: true, qtyChangeReason: reason };
       });
       recalcTotalSpent(items);
       return { items };
@@ -105,5 +116,21 @@ export const useShoppingStore = create<ShoppingStore>((set, get) => ({
         item.id === id ? { ...item, addedToCart: !item.addedToCart } : item
       ),
     }));
+  },
+
+  // Volta todos os itens para o estado "não adicionado" preservando os nomes
+  resetItemsToPreList: () => {
+    set((state) => {
+      const items = state.items.map((item) => ({
+        ...item,
+        actualQty: null,
+        unitPrice: null,
+        totalPrice: null,
+        addedToCart: false,
+        priceVariation: null,
+      }));
+      recalcTotalSpent(items);
+      return { items };
+    });
   },
 }));

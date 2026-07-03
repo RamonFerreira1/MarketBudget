@@ -16,6 +16,7 @@ export interface ShoppingItem {
   totalPrice: number | null;
   addedToCart: boolean;
   priceVariation: PriceVariation | null;
+  qtyChangeReason?: string;
 }
 
 // ─── Shopping Session ────────────────────────────────────────────────────────
