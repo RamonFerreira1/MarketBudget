@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Modal,
   TouchableOpacity,
+  Share,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
@@ -21,6 +22,7 @@ import {
   StoredRecord,
 } from '../services/priceHistoryService';
 import { ShoppingSession } from '../types';
+import { logout } from '../services/authService';
 
 type Tab = 'sessions' | 'prices';
 
@@ -71,6 +73,23 @@ export const HistoryScreen: React.FC = () => {
     const history = await getProductHistory(productName);
     setProductHistory(history);
     setExpandedProduct(productName);
+  };
+
+  const handleShareSession = async (session: ShoppingSession) => {
+    try {
+      const text = `🛒 *Histórico de Compra*\nData: ${formatDate(session.createdAt)}\nTotal Gasto: ${formatCurrency(session.totalSpent)}\n\n*Itens Comprados:*\n${session.items.filter(i => i.addedToCart).map(i => `• ${i.name} (${i.actualQty}x) - ${formatCurrency(i.totalPrice ?? 0)}`).join('\n')}\n\n*MarketBudget App*`;
+      await Share.share({ message: text });
+    } catch (error) {
+      console.warn('Erro ao compartilhar', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (e) {
+      console.error('Error logging out:', e);
+    }
   };
 
   const handleDeleteSession = (sessionId: string) => {
@@ -131,13 +150,17 @@ export const HistoryScreen: React.FC = () => {
             <Text style={styles.cardTotalValue}>{formatCurrency(item.totalSpent)}</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.deleteBtn}
-          onPress={() => handleDeleteSession(item.id)}
-          hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
-        >
-          <Text style={styles.deleteIcon}>🗑️</Text>
-        </TouchableOpacity>
+        <View style={styles.sessionActions}>
+          <TouchableOpacity onPress={() => handleShareSession(item)} style={styles.sessionShareBtn}>
+            <Text style={styles.sessionShareIcon}>📤</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.deleteBtn}
+            onPress={() => handleDeleteSession(item.id)}
+          >
+            <Text style={styles.deleteIcon}>🗑️</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {isExpanded && (
@@ -180,13 +203,8 @@ export const HistoryScreen: React.FC = () => {
             {productHistory.length === 0 ? (
               <ActivityIndicator size="small" color={Colors.primary} />
             ) : (
-              productHistory.map((record, index) => {
-                // Descobre a variação em relação ao item anterior (mais antigo é no topo ou não)
-                // O histórico vem do mais recente para o mais antigo, ou o inverso?
-                // getProductHistory usa (a, b) => a.getTime - b.getTime, então o mais ANTIGO vem primeiro
-                // Vamos inverter para mostrar o mais novo primeiro
+              (() => {
                 const reversedHistory = [...productHistory].reverse();
-                
                 return reversedHistory.map((rec, i) => {
                   let diff = 0;
                   if (i < reversedHistory.length - 1) {
@@ -215,7 +233,7 @@ export const HistoryScreen: React.FC = () => {
                     </View>
                   );
                 });
-              })[0] // only render map once
+              })()
             )}
           </View>
         )}
@@ -233,9 +251,14 @@ export const HistoryScreen: React.FC = () => {
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Histórico</Text>
-        <TouchableOpacity onPress={() => setClearAllConfirm(true)} style={styles.clearAllBtn}>
-          <Text style={styles.clearAllIcon}>🧹</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRightActions}>
+          <TouchableOpacity onPress={() => setClearAllConfirm(true)} style={styles.clearAllBtn}>
+            <Text style={styles.clearAllIcon}>🧹</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
+            <Text style={styles.logoutIcon}>🚪</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Tabs */}
@@ -265,26 +288,60 @@ export const HistoryScreen: React.FC = () => {
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
-      ) : activeTab === 'sessions' ? (
-        <FlatList
-          data={sessions}
-          keyExtractor={(s) => s.id}
-          renderItem={renderSessionItem}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>Nenhuma compra concluída ainda.</Text>
-          }
-        />
       ) : (
-        <FlatList
-          data={products}
-          keyExtractor={(p) => p}
-          renderItem={renderProductItem}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>Nenhum produto registrado no histórico.</Text>
-          }
-        />
+        <View style={styles.listContainer}>
+          {activeTab === 'sessions' ? (
+            <FlatList
+              data={sessions}
+              keyExtractor={(item) => item.id}
+              ListHeaderComponent={() => {
+                if (sessions.length === 0) return null;
+                // Agregação mensal
+                const monthlyData = sessions.reduce((acc, s) => {
+                  const dateStr = formatDate(s.createdAt);
+                  const month = dateStr.substring(3); // "07/2026"
+                  acc[month] = (acc[month] || 0) + s.totalSpent;
+                  return acc;
+                }, {} as Record<string, number>);
+                const chartData = Object.entries(monthlyData).map(([month, total]) => ({ month, total })).reverse();
+                const maxTotal = Math.max(...chartData.map(d => d.total));
+
+                return (
+                  <View style={styles.chartContainer}>
+                    <Text style={styles.chartTitle}>📊 Gastos por Mês</Text>
+                    <View style={styles.chartArea}>
+                      {chartData.map((d) => (
+                        <View key={d.month} style={styles.chartBarWrapper}>
+                          <Text style={styles.chartBarTotal}>{formatCurrency(d.total)}</Text>
+                          <View style={styles.chartBarBackground}>
+                            <View style={[styles.chartBarFill, { height: `${(d.total / maxTotal) * 100}%` }]} />
+                          </View>
+                          <Text style={styles.chartBarLabel}>{d.month.substring(0, 5)}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                );
+              }}
+              renderItem={renderSessionItem}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>Nenhuma compra finalizada ainda.</Text>
+              }
+            />
+          ) : (
+            <FlatList
+              data={products}
+              keyExtractor={(p) => p}
+              renderItem={renderProductItem}
+              contentContainerStyle={styles.listContent}
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>Nenhum produto registrado no histórico.</Text>
+              }
+            />
+          )}
+        </View>
       )}
 
       {/* Modal de Confirmação */}
@@ -366,39 +423,47 @@ const styles = StyleSheet.create({
     color: Colors.surface,
     textAlign: 'center',
   },
-  clearAllBtn: {
-    width: 40,
-    height: 40,
+  headerRightActions: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+  },
+  clearAllBtn: {
+    padding: Spacing.sm,
   },
   clearAllIcon: {
+    fontSize: 20,
+  },
+  logoutBtn: {
+    padding: Spacing.sm,
+  },
+  logoutIcon: {
     fontSize: 20,
   },
   tabsWrapper: {
     flexDirection: 'row',
     backgroundColor: Colors.primaryDark,
-    paddingHorizontal: Spacing.base,
-    paddingBottom: Spacing.sm,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.sm,
   },
   tab: {
     flex: 1,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.md,
     alignItems: 'center',
     borderBottomWidth: 3,
     borderBottomColor: 'transparent',
   },
   tabActive: {
-    borderBottomColor: Colors.surface,
+    borderBottomColor: Colors.primary,
   },
   tabText: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
     color: 'rgba(255,255,255,0.6)',
+    fontWeight: Typography.bold,
   },
   tabTextActive: {
     color: Colors.surface,
-    fontWeight: Typography.bold,
+  },
+  listContainer: {
+    flex: 1,
   },
   listContent: {
     padding: Spacing.base,
@@ -409,6 +474,53 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     marginTop: Spacing.xl,
     fontSize: Typography.base,
+  },
+  chartContainer: {
+    backgroundColor: Colors.surface,
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.xl,
+    marginBottom: Spacing.lg,
+    ...Shadow.md,
+  },
+  chartTitle: {
+    fontSize: Typography.lg,
+    fontWeight: Typography.bold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.lg,
+    textAlign: 'center',
+  },
+  chartArea: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+    height: 150,
+  },
+  chartBarWrapper: {
+    alignItems: 'center',
+    width: 60,
+  },
+  chartBarBackground: {
+    width: 24,
+    height: 100,
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.sm,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+    marginVertical: Spacing.sm,
+  },
+  chartBarFill: {
+    width: '100%',
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.sm,
+  },
+  chartBarLabel: {
+    fontSize: Typography.xs,
+    color: Colors.textSecondary,
+  },
+  chartBarTotal: {
+    fontSize: Typography.xs,
+    color: Colors.primaryDark,
+    fontWeight: Typography.bold,
   },
   card: {
     backgroundColor: Colors.surface,
@@ -468,10 +580,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  sessionActions: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.base,
+    paddingBottom: Spacing.sm,
+    justifyContent: 'flex-end',
+    gap: Spacing.sm,
+  },
+  sessionShareBtn: {
+    padding: Spacing.xs,
+  },
+  sessionShareIcon: {
+    fontSize: 18,
+  },
   deleteBtn: {
-    padding: Spacing.base,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: Spacing.xs,
   },
   deleteIcon: {
     fontSize: 18,

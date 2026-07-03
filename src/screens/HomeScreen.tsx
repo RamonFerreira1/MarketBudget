@@ -16,7 +16,7 @@ import { useShoppingStore } from '../store/useShoppingStore';
 import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import { formatCurrency } from '../utils/formatters';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { LOCAL_USER_ID } from '../services/authService';
+import { getCurrentUserId } from '../services/authService';
 
 type HomeNavProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -26,6 +26,7 @@ const QUICK_AMOUNTS = [100, 150, 200, 300, 500];
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeNavProp>();
   const createSession = useShoppingStore((s) => s.createSession);
+  const userId = getCurrentUserId();
 
   const [rawValue, setRawValue] = useState('');
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -49,7 +50,7 @@ export const HomeScreen: React.FC = () => {
       Animated.timing(scaleAnim, { toValue: 0.96, duration: 80, useNativeDriver: true }),
       Animated.timing(scaleAnim, { toValue: 1, duration: 80, useNativeDriver: true }),
     ]).start(() => {
-      createSession(budget, LOCAL_USER_ID);
+      createSession(budget, userId || '');
       navigation.navigate('PreList');
     });
   };
