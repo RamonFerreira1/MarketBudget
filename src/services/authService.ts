@@ -1,10 +1,16 @@
-// Sem Firebase Auth — app local com ID fixo.
-// Para adicionar Google Auth no futuro, instale expo-auth-session.
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { app } from '../config/firebase'; // Ensure app is exported or initializeAuth is used
 
-/** ID local fixo do usuário neste dispositivo */
-export const LOCAL_USER_ID = 'local_user';
+const auth = getAuth(app);
 
-/** Retorna o usuário atual (local) */
-export function getCurrentUserId(): string {
-  return LOCAL_USER_ID;
+export function getCurrentUserId(): string | null {
+  return auth.currentUser?.uid || null;
 }
+
+export function subscribeToAuthChanges(callback: (user: User | null) => void) {
+  return onAuthStateChanged(auth, callback);
+}
+
+export const login = (email: string, pass: string) => signInWithEmailAndPassword(auth, email, pass);
+export const register = (email: string, pass: string) => createUserWithEmailAndPassword(auth, email, pass);
+export const logout = () => signOut(auth);

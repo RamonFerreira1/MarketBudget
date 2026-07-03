@@ -152,6 +152,14 @@ export const MarketModeScreen: React.FC = () => {
   const pendingItems = items.filter((i) => !i.addedToCart);
   const cartItems = items.filter((i) => i.addedToCart);
 
+  // Agrupar pendentes por categoria
+  const groupedPending = pendingItems.reduce((acc, item) => {
+    const cat = item.category || 'Outros';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(item);
+    return acc;
+  }, {} as Record<string, ShoppingItem[]>);
+
   const renderSectionHeader = (title: string, count: number, color: string) => (
     <View style={styles.sectionHeader}>
       <View style={[styles.sectionDot, { backgroundColor: color }]} />
@@ -187,15 +195,15 @@ export const MarketModeScreen: React.FC = () => {
         renderItem={null}
         ListHeaderComponent={
           <>
-            {/* Pendentes */}
-            {pendingItems.length > 0 && (
-              <>
+            {/* Pendentes por categoria */}
+            {Object.entries(groupedPending).map(([categoryName, catItems]) => (
+              <React.Fragment key={categoryName}>
                 {renderSectionHeader(
-                  'A pegar na prateleira',
-                  pendingItems.length,
+                  categoryName,
+                  catItems.length,
                   Colors.warning
                 )}
-                {pendingItems.map((item) => (
+                {catItems.map((item) => (
                   <ProductCard
                     key={item.id}
                     item={item}
@@ -203,8 +211,8 @@ export const MarketModeScreen: React.FC = () => {
                     onPress={handleItemPress}
                   />
                 ))}
-              </>
-            )}
+              </React.Fragment>
+            ))}
 
             {/* No carrinho */}
             {cartItems.length > 0 && (

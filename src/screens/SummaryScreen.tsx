@@ -8,6 +8,7 @@ import {
   StatusBar,
   Alert,
   ActivityIndicator,
+  Share,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -78,6 +79,18 @@ export const SummaryScreen: React.FC = () => {
       );
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      const text = `🛒 *Resumo da Compra*\nData: ${formatDate(session?.createdAt ?? new Date())}\nTotal Gasto: ${formatCurrency(totalSpent)}\nOrçamento: ${formatCurrency(budget)}\n\n*Itens Comprados:*\n${cartItems.map(i => `• ${i.name} (${i.actualQty}x) - ${formatCurrency(i.totalPrice ?? 0)}`).join('\n')}\n\n*MarketBudget App*`;
+
+      await Share.share({
+        message: text,
+      });
+    } catch (error) {
+      console.warn('Erro ao compartilhar', error);
     }
   };
 
@@ -189,9 +202,14 @@ export const SummaryScreen: React.FC = () => {
             )}
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.newBtn} onPress={handleNewShopping}>
-            <Text style={styles.newText}>🛒 Nova Compra</Text>
-          </TouchableOpacity>
+          <View style={styles.footerRow}>
+            <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+              <Text style={styles.shareText}>📤 Compartilhar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.newBtn} onPress={handleNewShopping}>
+              <Text style={styles.newText}>🛒 Nova Compra</Text>
+            </TouchableOpacity>
+          </View>
         )}
         {saved && (
           <Text style={styles.savedConfirmation}>
@@ -343,6 +361,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...Shadow.md,
   },
+  footerRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    width: '100%',
+  },
   saveBtn: {
     width: '100%',
     backgroundColor: Colors.primary,
@@ -359,8 +382,22 @@ const styles = StyleSheet.create({
     fontWeight: Typography.extrabold,
     color: Colors.surface,
   },
+  shareBtn: {
+    flex: 1,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.base + 4,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  shareText: {
+    color: Colors.primaryDark,
+    fontSize: Typography.md,
+    fontWeight: Typography.bold,
+  },
   newBtn: {
-    width: '100%',
+    flex: 1,
     backgroundColor: Colors.primaryDark,
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.base + 4,

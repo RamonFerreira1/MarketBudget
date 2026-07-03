@@ -22,7 +22,14 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "MarketBudget",
+      "shortName": "MBudget",
+      "themeColor": "#10B981",
+      "backgroundColor": "#F3F4F6",
+      "display": "standalone",
+      "dir": "ltr",
+      "lang": "pt-BR"
     }
   }
 }

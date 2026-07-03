@@ -21,7 +21,7 @@ const firebaseConfig = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Evita re-inicialização em hot reload
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 // Firestore com persistência offline habilitada
 let db: ReturnType<typeof getFirestore>;
