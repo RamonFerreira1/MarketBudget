@@ -21,24 +21,24 @@ const firebaseConfig = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Evita re-inicialização em hot reload
-export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+export const firebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 // Firestore com persistência offline habilitada
 let db: ReturnType<typeof getFirestore>;
 try {
-  db = initializeFirestore(app, {
+  db = initializeFirestore(firebaseApp, {
     localCache: persistentLocalCache({
       tabManager: persistentMultipleTabManager(),
     }),
   });
 } catch {
-  db = getFirestore(app);
+  db = getFirestore(firebaseApp);
 }
 
 // Auth — usa inMemoryPersistence no Expo Managed.
 // Para persistência real entre sessões, migre para @react-native-firebase.
-const auth = initializeAuth(app, {
+const auth = initializeAuth(firebaseApp, {
   persistence: inMemoryPersistence,
 });
 
-export { app, db, auth };
+export { firebaseApp as app, db, auth };
