@@ -8,7 +8,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1, height: Platform.OS === 'web' ? '100vh' : '100%' }}>
-      <SafeAreaProvider>
+      <SafeAreaProvider style={{ flex: 1 }}>
         <AppNavigator />
       </SafeAreaProvider>
     </GestureHandlerRootView>

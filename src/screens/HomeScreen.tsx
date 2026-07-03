@@ -162,7 +162,7 @@ export const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    height: Platform.OS === 'web' ? '100vh' : '100%',
+    overflow: 'hidden', // Importante para o ScrollView não vazar a tela na Web
     backgroundColor: Colors.background,
   },
   header: {
