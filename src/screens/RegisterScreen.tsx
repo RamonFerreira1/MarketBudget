@@ -5,52 +5,64 @@ import {
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
-import { login } from '../services/authService';
+import { register } from '../services/authService';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
-type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
+type RegisterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Register'>;
 
 interface Props {
-  navigation: LoginScreenNavigationProp;
+  navigation: RegisterScreenNavigationProp;
 }
 
 function getFirebaseErrorMessage(code: string): string {
   switch (code) {
+    case 'auth/email-already-in-use':
+      return 'Este e-mail já possui uma conta. Tente fazer login.';
     case 'auth/invalid-email':
       return 'E-mail inválido. Verifique o formato (ex: nome@email.com).';
-    case 'auth/user-not-found':
-      return 'Nenhuma conta encontrada com este e-mail.';
-    case 'auth/wrong-password':
-      return 'Senha incorreta. Tente novamente.';
-    case 'auth/invalid-credential':
-      return 'E-mail ou senha incorretos. Verifique seus dados.';
-    case 'auth/too-many-requests':
-      return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
+    case 'auth/weak-password':
+      return 'A senha deve ter pelo menos 6 caracteres.';
     case 'auth/network-request-failed':
       return 'Sem conexão com a internet. Verifique sua rede.';
-    case 'auth/user-disabled':
-      return 'Esta conta foi desativada. Entre em contato com o suporte.';
+    case 'auth/too-many-requests':
+      return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
     default:
-      return 'Algo deu errado. Tente novamente.';
+      return 'Algo deu errado ao criar sua conta. Tente novamente.';
   }
 }
 
-export const LoginScreen: React.FC<Props> = ({ navigation }) => {
+export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
-  const handleLogin = async () => {
+  const clearError = () => setErrorMsg('');
+
+  const handleRegister = async () => {
     setErrorMsg('');
-    if (!email.trim() || !password) {
-      setErrorMsg('Preencha o e-mail e a senha para entrar.');
+    setSuccessMsg('');
+
+    if (!email.trim() || !password || !confirmPassword) {
+      setErrorMsg('Preencha todos os campos para criar sua conta.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setErrorMsg('As senhas não coincidem. Verifique e tente novamente.');
+      return;
+    }
+    if (password.length < 6) {
+      setErrorMsg('A senha deve ter pelo menos 6 caracteres.');
       return;
     }
 
     setLoading(true);
     try {
-      await login(email.trim(), password);
+      await register(email.trim(), password);
+      setSuccessMsg('Conta criada com sucesso! Entrando...');
+      // Navigation to Home will happen automatically via auth state listener
     } catch (error: any) {
       const code = error?.code ?? '';
       setErrorMsg(getFirebaseErrorMessage(code));
@@ -65,12 +77,17 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        {/* Header */}
         <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Text style={styles.backBtnText}>← Voltar</Text>
+          </TouchableOpacity>
           <Text style={styles.logoIcon}>🛒</Text>
-          <Text style={styles.title}>MarketBudget</Text>
-          <Text style={styles.subtitle}>Acesse para sincronizar na nuvem</Text>
+          <Text style={styles.title}>Criar Conta</Text>
+          <Text style={styles.subtitle}>Rápido e gratuito — sincronize em qualquer dispositivo</Text>
         </View>
 
+        {/* Form */}
         <View style={styles.form}>
           <Text style={styles.label}>E-mail</Text>
           <TextInput
@@ -78,7 +95,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             placeholder="seu@email.com"
             placeholderTextColor={Colors.textMuted}
             value={email}
-            onChangeText={(t) => { setEmail(t); setErrorMsg(''); }}
+            onChangeText={(t) => { setEmail(t); clearError(); }}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
@@ -87,13 +104,28 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.label}>Senha</Text>
           <TextInput
             style={[styles.input, errorMsg ? styles.inputError : null]}
-            placeholder="••••••"
+            placeholder="Mínimo 6 caracteres"
             placeholderTextColor={Colors.textMuted}
             value={password}
-            onChangeText={(t) => { setPassword(t); setErrorMsg(''); }}
+            onChangeText={(t) => { setPassword(t); clearError(); }}
             secureTextEntry
           />
 
+          <Text style={styles.label}>Confirmar Senha</Text>
+          <TextInput
+            style={[
+              styles.input,
+              styles.inputLast,
+              errorMsg ? styles.inputError : null,
+            ]}
+            placeholder="Repita a senha"
+            placeholderTextColor={Colors.textMuted}
+            value={confirmPassword}
+            onChangeText={(t) => { setConfirmPassword(t); clearError(); }}
+            secureTextEntry
+          />
+
+          {/* Error message */}
           {errorMsg ? (
             <View style={styles.errorBox}>
               <Text style={styles.errorIcon}>⚠️</Text>
@@ -101,26 +133,31 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           ) : null}
 
+          {/* Success message */}
+          {successMsg ? (
+            <View style={styles.successBox}>
+              <Text style={styles.successIcon}>✅</Text>
+              <Text style={styles.successText}>{successMsg}</Text>
+            </View>
+          ) : null}
+
           {loading ? (
             <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: Spacing.lg }} />
           ) : (
             <>
-              <TouchableOpacity style={styles.primaryBtn} onPress={handleLogin} activeOpacity={0.85}>
-                <Text style={styles.primaryBtnText}>Entrar</Text>
+              <TouchableOpacity style={styles.primaryBtn} onPress={handleRegister} activeOpacity={0.85}>
+                <Text style={styles.primaryBtnText}>Criar minha conta</Text>
               </TouchableOpacity>
 
-              <View style={styles.dividerRow}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>ou</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
               <TouchableOpacity
-                style={styles.secondaryBtn}
-                onPress={() => navigation.navigate('Register')}
-                activeOpacity={0.75}
+                style={styles.linkBtn}
+                onPress={() => navigation.goBack()}
+                activeOpacity={0.7}
               >
-                <Text style={styles.secondaryBtnText}>Criar nova conta</Text>
+                <Text style={styles.linkText}>
+                  Já tem uma conta?{' '}
+                  <Text style={styles.linkTextBold}>Entrar</Text>
+                </Text>
               </TouchableOpacity>
             </>
           )}
@@ -144,8 +181,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.xxl,
   },
+  backBtn: {
+    alignSelf: 'flex-start',
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    marginBottom: Spacing.lg,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  backBtnText: {
+    color: Colors.surface,
+    fontSize: Typography.sm,
+    fontWeight: Typography.semibold,
+  },
   logoIcon: {
-    fontSize: 64,
+    fontSize: 56,
     marginBottom: Spacing.sm,
   },
   title: {
@@ -155,9 +205,10 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
   },
   subtitle: {
-    fontSize: Typography.md,
-    color: 'rgba(255,255,255,0.8)',
+    fontSize: Typography.base,
+    color: 'rgba(255,255,255,0.75)',
     marginTop: Spacing.xs,
+    textAlign: 'center',
   },
   form: {
     backgroundColor: Colors.surface,
@@ -180,6 +231,9 @@ const styles = StyleSheet.create({
     fontSize: Typography.md,
     color: Colors.textPrimary,
     marginBottom: Spacing.lg,
+  },
+  inputLast: {
+    marginBottom: Spacing.md,
   },
   inputError: {
     borderColor: Colors.danger,
@@ -207,11 +261,32 @@ const styles = StyleSheet.create({
     fontWeight: Typography.medium,
     lineHeight: 20,
   },
+  successBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+    gap: Spacing.xs,
+  },
+  successIcon: {
+    fontSize: 15,
+  },
+  successText: {
+    flex: 1,
+    fontSize: Typography.sm,
+    color: '#065F46',
+    fontWeight: Typography.medium,
+  },
   primaryBtn: {
     backgroundColor: Colors.primary,
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
+    marginTop: Spacing.xs,
     marginBottom: Spacing.md,
   },
   primaryBtnText: {
@@ -219,34 +294,18 @@ const styles = StyleSheet.create({
     fontSize: Typography.md,
     fontWeight: Typography.bold,
   },
-  dividerRow: {
-    flexDirection: 'row',
+  linkBtn: {
     alignItems: 'center',
-    marginBottom: Spacing.md,
-    gap: Spacing.sm,
+    paddingVertical: Spacing.sm,
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.border,
+  linkText: {
+    fontSize: Typography.base,
+    color: Colors.textSecondary,
   },
-  dividerText: {
-    fontSize: Typography.sm,
-    color: Colors.textMuted,
-    fontWeight: Typography.medium,
-  },
-  secondaryBtn: {
-    borderWidth: 1.5,
-    borderColor: Colors.primaryDark,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
-  },
-  secondaryBtnText: {
+  linkTextBold: {
     color: Colors.primaryDark,
-    fontSize: Typography.md,
     fontWeight: Typography.bold,
   },
 });
 
-export default LoginScreen;
+export default RegisterScreen;

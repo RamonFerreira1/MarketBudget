@@ -8,11 +8,13 @@ import MarketModeScreen from '../screens/MarketModeScreen';
 import SummaryScreen from '../screens/SummaryScreen';
 import { HistoryScreen } from '../screens/HistoryScreen';
 import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
 import { subscribeToAuthChanges } from '../services/authService';
 import { Colors } from '../theme';
 
 export type RootStackParamList = {
   Login: undefined;
+  Register: undefined;
   Home: undefined;
   PreList: undefined;
   MarketMode: undefined;
@@ -52,7 +54,10 @@ export const AppNavigator: React.FC = () => {
         }}
       >
         {!user ? (
-          <Stack.Screen name="Login" component={LoginScreen} />
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+          </>
         ) : (
           <>
             <Stack.Screen name="Home" component={HomeScreen} />
