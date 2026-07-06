@@ -17,9 +17,9 @@ export const LoginScreen = () => {
     setLoading(true);
     try {
       if (isLogin) {
-        await login(email, password);
+        await login(email.trim(), password);
       } else {
-        await register(email, password);
+        await register(email.trim(), password);
         Alert.alert('Sucesso', 'Conta criada com sucesso!');
       }
     } catch (error: any) {

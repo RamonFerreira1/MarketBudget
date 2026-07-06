@@ -1,7 +1,5 @@
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { app } from '../config/firebase'; // Ensure app is exported or initializeAuth is used
-
-const auth = getAuth(app);
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 export function getCurrentUserId(): string | null {
   return auth.currentUser?.uid || null;
