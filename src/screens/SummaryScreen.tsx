@@ -6,7 +6,6 @@ import {
   FlatList,
   TouchableOpacity,
   StatusBar,
-  Alert,
   ActivityIndicator,
   Share,
 } from 'react-native';
@@ -34,6 +33,7 @@ export const SummaryScreen: React.FC = () => {
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   const cartItems = items.filter((i) => i.addedToCart);
   const skippedItems = items.filter((i) => !i.addedToCart);
@@ -41,25 +41,35 @@ export const SummaryScreen: React.FC = () => {
   const isWithinBudget = totalSpent <= budget;
 
   const handleSaveAndFinish = async () => {
+    setSaveError('');
     setSaving(true);
     try {
-      // 1. Salva a sessão no AsyncStorage
       const sessionId = session?.id || `local_${Date.now()}`;
-      const finalSession = session 
-        ? { ...session, items, totalSpent, id: sessionId } 
-        : { 
-            id: sessionId, 
-            createdAt: new Date(), 
-            budget, 
-            totalSpent, 
-            status: 'pre-list' as const, 
-            userId: 'local', 
-            items 
+
+      // Garante que createdAt é sempre um Date válido
+      const rawDate = session?.createdAt;
+      const createdAt =
+        rawDate instanceof Date
+          ? rawDate
+          : rawDate
+          ? new Date(rawDate as any)
+          : new Date();
+
+      const finalSession = session
+        ? { ...session, items, totalSpent, id: sessionId, createdAt }
+        : {
+            id: sessionId,
+            createdAt,
+            budget,
+            totalSpent,
+            status: 'pre-list' as const,
+            userId: 'local',
+            items,
           };
 
       await finalizeSession(finalSession);
 
-      // 2. Salva o histórico de preços para cada item comprado
+      // Salva histórico de preços para cada item comprado
       const pricePromises = cartItems
         .filter((i) => i.unitPrice !== null)
         .map((item) =>
@@ -71,12 +81,14 @@ export const SummaryScreen: React.FC = () => {
       await Promise.allSettled(pricePromises);
 
       setSaved(true);
-    } catch (error) {
-      Alert.alert(
-        'Erro ao salvar',
-        'Não foi possível salvar a compra no dispositivo.',
-        [{ text: 'OK' }]
-      );
+    } catch (error: any) {
+      console.error('Erro ao salvar sessão:', error);
+      const msg = error?.message || 'Erro desconhecido';
+      if (msg.includes('autenticado') || msg.includes('permission')) {
+        setSaveError('Você precisa estar logado para salvar. Faça login e tente novamente.');
+      } else {
+        setSaveError(`Não foi possível salvar a compra. (${msg})`);
+      }
     } finally {
       setSaving(false);
     }
@@ -189,11 +201,18 @@ export const SummaryScreen: React.FC = () => {
 
       {/* Rodapé */}
       <View style={styles.footer}>
+        {saveError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>⚠️ {saveError}</Text>
+          </View>
+        ) : null}
+
         {!saved ? (
           <TouchableOpacity
             style={[styles.saveBtn, saving && styles.saveBtnLoading]}
             onPress={handleSaveAndFinish}
             disabled={saving}
+            activeOpacity={0.85}
           >
             {saving ? (
               <ActivityIndicator color={Colors.surface} />
@@ -412,6 +431,21 @@ const styles = StyleSheet.create({
     fontSize: Typography.sm,
     color: Colors.primary,
     fontWeight: Typography.semibold,
+  },
+  errorBox: {
+    width: '100%',
+    backgroundColor: Colors.dangerBg,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+  },
+  errorText: {
+    fontSize: Typography.sm,
+    color: '#B91C1C',
+    fontWeight: Typography.medium,
+    lineHeight: 20,
+    textAlign: 'center',
   },
 });
 
