@@ -76,6 +76,8 @@ export const SummaryScreen: React.FC = () => {
           savePriceRecord(item.name, {
             unitPrice: item.unitPrice!,
             sessionId,
+            supermarketId: session?.supermarketId,
+            supermarketName: session?.supermarketName,
           })
         );
       await Promise.allSettled(pricePromises);
@@ -127,6 +129,11 @@ export const SummaryScreen: React.FC = () => {
         <Text style={styles.headerDate}>
           {formatDate(session?.createdAt ?? new Date())}
         </Text>
+        {session?.supermarketName ? (
+          <View style={styles.marketBadge}>
+            <Text style={styles.marketBadgeText}>🏪 {session.supermarketName}</Text>
+          </View>
+        ) : null}
 
         {/* Bloco de valores */}
         <View style={styles.valuesRow}>
@@ -229,6 +236,12 @@ export const SummaryScreen: React.FC = () => {
               <Text style={styles.newText}>🛒 Nova Compra</Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity
+            style={styles.compareBtn}
+            onPress={() => navigation.navigate('MarketComparison')}
+          >
+            <Text style={styles.compareText}>🏪 Ver Comparação de Mercados</Text>
+          </TouchableOpacity>
         )}
         {saved && (
           <Text style={styles.savedConfirmation}>
@@ -446,6 +459,32 @@ const styles = StyleSheet.create({
     fontWeight: Typography.medium,
     lineHeight: 20,
     textAlign: 'center',
+  },
+  marketBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  marketBadgeText: {
+    color: Colors.surface,
+    fontSize: Typography.sm,
+    fontWeight: Typography.semibold,
+  },
+  compareBtn: {
+    width: '100%',
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.base,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+  },
+  compareText: {
+    color: Colors.primaryDark,
+    fontSize: Typography.sm,
+    fontWeight: Typography.bold,
   },
 });
 

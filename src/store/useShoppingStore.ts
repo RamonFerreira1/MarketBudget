@@ -7,7 +7,7 @@ interface ShoppingStore {
   items: ShoppingItem[];
 
   // Session actions
-  createSession: (budget: number, userId: string) => void;
+  createSession: (budget: number, userId: string, supermarketId?: string, supermarketName?: string) => void;
   setSessionStatus: (status: SessionStatus) => void;
   setSessionId: (id: string) => void;
   clearSession: () => void;
@@ -32,7 +32,7 @@ export const useShoppingStore = create<ShoppingStore>((set, get) => ({
   session: null,
   items: [],
 
-  createSession: (budget, userId) => {
+  createSession: (budget, userId, supermarketId, supermarketName) => {
     const session: ShoppingSession = {
       id: '',
       createdAt: new Date(),
@@ -41,6 +41,8 @@ export const useShoppingStore = create<ShoppingStore>((set, get) => ({
       status: 'pre-list',
       userId,
       items: [],
+      supermarketId,
+      supermarketName,
     };
     set({ session, items: [] });
     useBudgetStore.getState().setBudget(budget);

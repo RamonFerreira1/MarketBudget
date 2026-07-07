@@ -17,6 +17,8 @@ import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import { formatCurrency } from '../utils/formatters';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { getCurrentUserId } from '../services/authService';
+import SupermarketPicker from '../components/SupermarketPicker';
+import { Supermarket } from '../types';
 
 type HomeNavProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -29,6 +31,7 @@ export const HomeScreen: React.FC = () => {
   const userId = getCurrentUserId();
 
   const [rawValue, setRawValue] = useState('');
+  const [pickerVisible, setPickerVisible] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   // Formata o input como moeda enquanto digita
@@ -50,9 +53,19 @@ export const HomeScreen: React.FC = () => {
       Animated.timing(scaleAnim, { toValue: 0.96, duration: 80, useNativeDriver: true }),
       Animated.timing(scaleAnim, { toValue: 1, duration: 80, useNativeDriver: true }),
     ]).start(() => {
-      createSession(budget, userId || '');
-      navigation.navigate('PreList');
+      setPickerVisible(true);
     });
+  };
+
+  const handleMarketSelected = (supermarket: Supermarket | null) => {
+    setPickerVisible(false);
+    createSession(
+      budget,
+      userId || '',
+      supermarket?.id,
+      supermarket?.name
+    );
+    navigation.navigate('PreList');
   };
 
   const handleQuickAmount = (amount: number) => {
@@ -156,6 +169,12 @@ export const HomeScreen: React.FC = () => {
           ))}
         </View>
       </ScrollView>
+
+      <SupermarketPicker
+        visible={pickerVisible}
+        onSelect={handleMarketSelected}
+        onClose={() => setPickerVisible(false)}
+      />
     </View>
   );
 };

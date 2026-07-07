@@ -11,6 +11,7 @@ import {
   Share,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { getUserSessions, deleteSession, clearAllSessions } from '../services/shoppingListService';
@@ -20,14 +21,17 @@ import {
   removeRecordsForSession,
   clearAllHistory,
   StoredRecord,
+  getAllMarketsComparison,
 } from '../services/priceHistoryService';
-import { ShoppingSession } from '../types';
+import { ShoppingSession, ProductMarketComparison } from '../types';
 import { logout } from '../services/authService';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
-type Tab = 'sessions' | 'prices';
+type Tab = 'sessions' | 'prices' | 'markets';
+type NavProp = StackNavigationProp<RootStackParamList>;
 
 export const HistoryScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavProp>();
   const [activeTab, setActiveTab] = useState<Tab>('sessions');
   const [loading, setLoading] = useState(true);
 
@@ -39,6 +43,9 @@ export const HistoryScreen: React.FC = () => {
   const [products, setProducts] = useState<string[]>([]);
   const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
   const [productHistory, setProductHistory] = useState<StoredRecord[]>([]);
+
+  // Markets Tab State
+  const [marketComparisons, setMarketComparisons] = useState<ProductMarketComparison[]>([]);
 
   // Deletion state
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
@@ -52,6 +59,9 @@ export const HistoryScreen: React.FC = () => {
 
       const fetchedProducts = await getAllTrackedProducts();
       setProducts(fetchedProducts);
+
+      const comparisons = await getAllMarketsComparison();
+      setMarketComparisons(comparisons);
     } catch (error) {
       console.error('Error loading history:', error);
     } finally {
@@ -126,6 +136,9 @@ export const HistoryScreen: React.FC = () => {
           >
             <View style={styles.cardInfo}>
             <Text style={styles.cardTitle}>{formatDate(item.createdAt)}</Text>
+            {item.supermarketName ? (
+              <Text style={styles.sessionMarket}>🏪 {item.supermarketName}</Text>
+            ) : null}
             <View style={styles.cardBadges}>
               <View
                 style={[
@@ -281,6 +294,14 @@ export const HistoryScreen: React.FC = () => {
             Evolução de Preços
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'markets' && styles.tabActive]}
+          onPress={() => setActiveTab('markets')}
+        >
+          <Text style={[styles.tabText, activeTab === 'markets' && styles.tabTextActive]}>
+            🏪 Mercados
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Content */}
@@ -330,7 +351,7 @@ export const HistoryScreen: React.FC = () => {
                 <Text style={styles.emptyText}>Nenhuma compra finalizada ainda.</Text>
               }
             />
-          ) : (
+          ) : activeTab === 'prices' ? (
             <FlatList
               data={products}
               keyExtractor={(p) => p}
@@ -338,6 +359,60 @@ export const HistoryScreen: React.FC = () => {
               contentContainerStyle={styles.listContent}
               ListEmptyComponent={
                 <Text style={styles.emptyText}>Nenhum produto registrado no histórico.</Text>
+              }
+            />
+          ) : (
+            /* ── Aba Mercados ─────────────────────────────────── */
+            <FlatList
+              data={marketComparisons.slice(0, 5)}
+              keyExtractor={(item) => item.productName}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+              ListHeaderComponent={
+                <View>
+                  <TouchableOpacity
+                    style={styles.compareFullBtn}
+                    onPress={() => navigation.navigate('MarketComparison')}
+                  >
+                    <Text style={styles.compareFullBtnText}>
+                      📊 Ver Comparação Completa →
+                    </Text>
+                  </TouchableOpacity>
+                  {marketComparisons.length > 0 && (
+                    <Text style={styles.marketsSubtitle}>
+                      Prévia — {marketComparisons.length} produto{marketComparisons.length !== 1 ? 's' : ''} comparados
+                    </Text>
+                  )}
+                </View>
+              }
+              renderItem={({ item }) => (
+                <View style={styles.marketCard}>
+                  <Text style={styles.marketProductName}>{item.productName}</Text>
+                  <View style={styles.marketRow}>
+                    <View style={styles.marketSide}>
+                      <Text style={styles.marketLabel}>✓ Mais barato</Text>
+                      <Text style={styles.marketName}>{item.cheapestMarket}</Text>
+                    </View>
+                    <View style={styles.marketDiffBox}>
+                      <Text style={styles.marketDiff}>
+                        -{formatCurrency(item.priceDiff)}
+                      </Text>
+                      <Text style={styles.marketDiffPct}>({item.priceDiffPercent}%)</Text>
+                    </View>
+                    <View style={[styles.marketSide, { alignItems: 'flex-end' }]}>
+                      <Text style={[styles.marketLabel, { textAlign: 'right' }]}>↑ Mais caro</Text>
+                      <Text style={[styles.marketName, { textAlign: 'right' }]}>{item.mostExpensiveMarket}</Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+              ListEmptyComponent={
+                <View style={styles.marketsEmpty}>
+                  <Text style={styles.emptyIcon}>🏪</Text>
+                  <Text style={styles.emptyText}>
+                    Faça compras em ao menos 2 mercados com os mesmos produtos para ver a comparação aqui.
+                  </Text>
+                </View>
               }
             />
           )}
@@ -723,6 +798,90 @@ const styles = StyleSheet.create({
     color: Colors.surface,
     fontWeight: Typography.bold,
   },
+  sessionMarket: {
+    fontSize: Typography.xs,
+    color: Colors.primaryDark,
+    fontWeight: Typography.semibold,
+    marginBottom: 4,
+  },
+  compareFullBtn: {
+    backgroundColor: Colors.primaryLight,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.base,
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  compareFullBtnText: {
+    color: Colors.primaryDark,
+    fontWeight: Typography.bold,
+    fontSize: Typography.base,
+  },
+  marketsSubtitle: {
+    fontSize: Typography.xs,
+    color: Colors.textMuted,
+    fontWeight: Typography.semibold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: Spacing.sm,
+  },
+  marketCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.base,
+    ...Shadow.sm,
+    marginBottom: Spacing.sm,
+  },
+  marketProductName: {
+    fontSize: Typography.base,
+    fontWeight: Typography.bold,
+    color: Colors.textPrimary,
+    textTransform: 'capitalize',
+    marginBottom: Spacing.sm,
+  },
+  marketRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  marketSide: {
+    flex: 1,
+  },
+  marketLabel: {
+    fontSize: Typography.xs,
+    color: Colors.textMuted,
+    marginBottom: 2,
+  },
+  marketName: {
+    fontSize: Typography.sm,
+    fontWeight: Typography.bold,
+    color: Colors.textPrimary,
+  },
+  marketDiffBox: {
+    alignItems: 'center',
+    paddingHorizontal: Spacing.sm,
+  },
+  marketDiff: {
+    fontSize: Typography.base,
+    fontWeight: Typography.extrabold,
+    color: Colors.priceDown,
+  },
+  marketDiffPct: {
+    fontSize: Typography.xs,
+    color: Colors.priceDown,
+    fontWeight: Typography.semibold,
+  },
+  marketsEmpty: {
+    alignItems: 'center',
+    paddingTop: Spacing.xxxl,
+    paddingHorizontal: Spacing.xl,
+  },
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: Spacing.base,
+  },
 });
+
 
 export default HistoryScreen;

@@ -1,7 +1,7 @@
 import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { getCurrentUserId } from './authService';
-import { PriceVariation } from '../types';
+import { PriceVariation, MarketPriceStat, ProductMarketComparison } from '../types';
 
 // ─── Tipos internos ───────────────────────────────────────────────────────────
 
@@ -9,6 +9,8 @@ export interface StoredRecord {
   date: string; // ISO string
   unitPrice: number;
   sessionId: string;
+  supermarketId?: string;
+  supermarketName?: string;
 }
 
 interface StoredHistory {
@@ -79,7 +81,7 @@ export async function getPriceVariation(
 
 export async function savePriceRecord(
   productName: string,
-  record: { unitPrice: number; sessionId: string }
+  record: { unitPrice: number; sessionId: string; supermarketId?: string; supermarketName?: string }
 ): Promise<void> {
   const key = normalizeName(productName);
   const history = await loadHistory();
@@ -89,6 +91,8 @@ export async function savePriceRecord(
     date: new Date().toISOString(),
     unitPrice: record.unitPrice,
     sessionId: record.sessionId,
+    supermarketId: record.supermarketId ?? null as any,
+    supermarketName: record.supermarketName ?? null as any,
   };
 
   history[key] = [...existing, newRecord].slice(-24);
@@ -137,4 +141,90 @@ export async function removeRecordsForSession(sessionId: string): Promise<void> 
   if (changed) {
     await saveHistory(history);
   }
+}
+
+/**
+ * Retorna estatísticas de preço por mercado para um produto.
+ * Só inclui registros que possuam supermarketId/Name.
+ */
+export async function getMarketComparison(
+  productName: string
+): Promise<ProductMarketComparison | null> {
+  const key = normalizeName(productName);
+  const history = await loadHistory();
+  const records = (history[key] ?? []).filter(
+    (r) => r.supermarketId && r.supermarketName
+  );
+
+  if (records.length === 0) return null;
+
+  // Agrupa por mercado
+  const byMarket: Record<string, StoredRecord[]> = {};
+  for (const r of records) {
+    const mid = r.supermarketId!;
+    if (!byMarket[mid]) byMarket[mid] = [];
+    byMarket[mid].push(r);
+  }
+
+  if (Object.keys(byMarket).length < 2) return null; // precisa de ao menos 2 mercados
+
+  const stats: MarketPriceStat[] = Object.entries(byMarket).map(([, recs]) => {
+    const sorted = [...recs].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    const lastPrice = sorted[0].unitPrice;
+    const avg = recs.reduce((s, r) => s + r.unitPrice, 0) / recs.length;
+
+    let trend: MarketPriceStat['trend'] = 'stable';
+    let trendPercent = '0';
+    if (sorted.length >= 2) {
+      const prev = sorted[1].unitPrice;
+      const diff = ((lastPrice - prev) / prev) * 100;
+      if (Math.abs(diff) >= 0.5) {
+        trend = diff > 0 ? 'up' : 'down';
+        trendPercent = Math.abs(diff).toFixed(1);
+      }
+    }
+
+    return {
+      supermarketId: sorted[0].supermarketId!,
+      supermarketName: sorted[0].supermarketName!,
+      lastPrice,
+      avgPrice: parseFloat(avg.toFixed(2)),
+      priceCount: recs.length,
+      trend,
+      trendPercent,
+    };
+  });
+
+  // Ordena do mais barato ao mais caro (pelo último preço)
+  stats.sort((a, b) => a.lastPrice - b.lastPrice);
+
+  const cheapest = stats[0];
+  const mostExpensive = stats[stats.length - 1];
+  const priceDiff = parseFloat((mostExpensive.lastPrice - cheapest.lastPrice).toFixed(2));
+  const priceDiffPercent = ((priceDiff / cheapest.lastPrice) * 100).toFixed(1);
+
+  return {
+    productName,
+    stats,
+    cheapestMarket: cheapest.supermarketName,
+    mostExpensiveMarket: mostExpensive.supermarketName,
+    priceDiff,
+    priceDiffPercent,
+  };
+}
+
+/** Retorna comparações de todos os produtos que têm dados de ao menos 2 mercados */
+export async function getAllMarketsComparison(): Promise<ProductMarketComparison[]> {
+  const history = await loadHistory();
+  const products = Object.keys(history);
+  const results: ProductMarketComparison[] = [];
+
+  for (const key of products) {
+    const comparison = await getMarketComparison(key);
+    if (comparison) results.push(comparison);
+  }
+
+  return results.sort((a, b) => a.productName.localeCompare(b.productName));
 }

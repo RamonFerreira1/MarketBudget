@@ -7,6 +7,7 @@ import PreListScreen from '../screens/PreListScreen';
 import MarketModeScreen from '../screens/MarketModeScreen';
 import SummaryScreen from '../screens/SummaryScreen';
 import { HistoryScreen } from '../screens/HistoryScreen';
+import MarketComparisonScreen from '../screens/MarketComparisonScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import { subscribeToAuthChanges } from '../services/authService';
@@ -20,6 +21,7 @@ export type RootStackParamList = {
   MarketMode: undefined;
   Summary: undefined;
   History: undefined;
+  MarketComparison: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -65,6 +67,7 @@ export const AppNavigator: React.FC = () => {
             <Stack.Screen name="MarketMode" component={MarketModeScreen} />
             <Stack.Screen name="Summary" component={SummaryScreen} />
             <Stack.Screen name="History" component={HistoryScreen} />
+            <Stack.Screen name="MarketComparison" component={MarketComparisonScreen} />
           </>
         )}
       </Stack.Navigator>

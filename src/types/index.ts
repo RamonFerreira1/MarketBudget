@@ -5,6 +5,14 @@ export interface PriceVariation {
   previousPrice: number;     // preço do mês anterior
 }
 
+// ─── Supermarket ──────────────────────────────────────────────────────────────
+export interface Supermarket {
+  id: string;
+  name: string;
+  address?: string;
+  createdAt: string; // ISO string
+}
+
 // ─── Shopping Item ───────────────────────────────────────────────────────────
 export interface ShoppingItem {
   id: string;
@@ -30,6 +38,8 @@ export interface ShoppingSession {
   status: SessionStatus;
   userId: string;
   items: ShoppingItem[];
+  supermarketId?: string;
+  supermarketName?: string;
 }
 
 // ─── Price Record ────────────────────────────────────────────────────────────
@@ -37,6 +47,8 @@ export interface PriceRecord {
   date: Date;
   unitPrice: number;
   sessionId: string;
+  supermarketId?: string;
+  supermarketName?: string;
 }
 
 export interface ProductPriceHistory {
@@ -45,5 +57,26 @@ export interface ProductPriceHistory {
   records: PriceRecord[];
 }
 
+// ─── Market Comparison ───────────────────────────────────────────────────────
+export interface MarketPriceStat {
+  supermarketId: string;
+  supermarketName: string;
+  lastPrice: number;
+  avgPrice: number;
+  priceCount: number;
+  trend: 'up' | 'down' | 'stable'; // comparado à penúltima compra nesse mercado
+  trendPercent: string;
+}
+
+export interface ProductMarketComparison {
+  productName: string;
+  stats: MarketPriceStat[]; // ordenado do mais barato ao mais caro
+  cheapestMarket: string;
+  mostExpensiveMarket: string;
+  priceDiff: number;        // diferença em R$ entre mais barato e mais caro
+  priceDiffPercent: string; // diferença em %
+}
+
 // ─── Budget State ─────────────────────────────────────────────────────────────
 export type BudgetStatus = 'safe' | 'warning' | 'exceeded';
+
