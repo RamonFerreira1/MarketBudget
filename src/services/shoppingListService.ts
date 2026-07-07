@@ -11,6 +11,24 @@ async function getCollectionRef() {
   return collection(db, 'users', uid, 'sessions');
 }
 
+/**
+ * Percorre recursivamente um objeto e substitui todos os valores `undefined`
+ * por `null`, pois o Firestore rejeita campos com valor `undefined`.
+ */
+function sanitizeForFirestore<T>(obj: T): T {
+  if (obj === undefined) return null as unknown as T;
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (obj instanceof Date) return obj;
+  if (Array.isArray(obj)) {
+    return obj.map((item) => sanitizeForFirestore(item)) as unknown as T;
+  }
+  const sanitized: Record<string, unknown> = {};
+  for (const key of Object.keys(obj as Record<string, unknown>)) {
+    sanitized[key] = sanitizeForFirestore((obj as Record<string, unknown>)[key]);
+  }
+  return sanitized as T;
+}
+
 // ─── API Pública ──────────────────────────────────────────────────────────────
 
 /** Retorna todas as sessões do usuário (mais recentes primeiro) */
@@ -48,10 +66,10 @@ export async function createSession(
     items: [],
   };
 
-  await setDoc(doc(colRef, id), {
+  await setDoc(doc(colRef, id), sanitizeForFirestore({
     ...newSession,
     createdAt: new Date(newSession.createdAt.toISOString()), // Garante serialização
-  });
+  }));
   return id;
 }
 
@@ -74,10 +92,10 @@ export async function finalizeSession(
     status: 'completed' as const,
   };
   
-  await setDoc(doc(colRef, session.id), {
+  await setDoc(doc(colRef, session.id), sanitizeForFirestore({
     ...completedSession,
     createdAt: new Date(completedSession.createdAt.toISOString()),
-  });
+  }));
 }
 
 /** Apaga todas as sessões (útil para testes) */
