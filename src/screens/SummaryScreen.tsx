@@ -228,20 +228,22 @@ export const SummaryScreen: React.FC = () => {
             )}
           </TouchableOpacity>
         ) : (
-          <View style={styles.footerRow}>
-            <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-              <Text style={styles.shareText}>📤 Compartilhar</Text>
+          <>
+            <View style={styles.footerRow}>
+              <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+                <Text style={styles.shareText}>📤 Compartilhar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.newBtn} onPress={handleNewShopping}>
+                <Text style={styles.newText}>🛒 Nova Compra</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              style={styles.compareBtn}
+              onPress={() => navigation.navigate('MarketComparison')}
+            >
+              <Text style={styles.compareText}>🏪 Ver Comparação de Mercados</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.newBtn} onPress={handleNewShopping}>
-              <Text style={styles.newText}>🛒 Nova Compra</Text>
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            style={styles.compareBtn}
-            onPress={() => navigation.navigate('MarketComparison')}
-          >
-            <Text style={styles.compareText}>🏪 Ver Comparação de Mercados</Text>
-          </TouchableOpacity>
+          </>
         )}
         {saved && (
           <Text style={styles.savedConfirmation}>
