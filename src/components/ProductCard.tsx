@@ -10,6 +10,7 @@ import { ShoppingItem } from '../types';
 import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import { formatCurrency } from '../utils/formatters';
 import PriceTagBadge from './PriceTagBadge';
+import { getCategoryMeta } from '../constants/categories';
 
 interface ProductCardProps {
   item: ShoppingItem;
@@ -41,8 +42,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const cardBorderColor = isInCart ? Colors.primary : Colors.border;
   const cardBg = isInCart ? Colors.primaryLight : Colors.surface;
 
-  // Ícone de categoria (emoji simples)
-  const categoryEmoji = getCategoryEmoji(item.category);
+  // Ícone e cor de categoria
+  const catMeta = getCategoryMeta(item.category);
 
   return (
     <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
@@ -76,7 +77,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {/* Linha superior: Emoji + Nome + Badge de preço */}
           <View style={styles.topRow}>
             <View style={styles.nameRow}>
-              <Text style={styles.emoji}>{categoryEmoji}</Text>
+              <View style={[styles.categoryBadge, { backgroundColor: catMeta.color }]}>
+                <Text style={styles.emoji}>{catMeta.icon}</Text>
+              </View>
               <View style={styles.nameBlock}>
                 <Text
                   style={[
@@ -87,7 +90,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 >
                   {item.name}
                 </Text>
-                <Text style={styles.category}>{item.category}</Text>
+                <Text style={[styles.category, { color: catMeta.textColor }]}>{item.category}</Text>
               </View>
             </View>
 
@@ -177,24 +180,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   );
 };
 
-// Mapeia categorias para emojis
-function getCategoryEmoji(category: string): string {
-  const map: Record<string, string> = {
-    'Grãos': '🌾',
-    'Laticínios': '🥛',
-    'Carnes': '🥩',
-    'Frutas': '🍎',
-    'Verduras': '🥦',
-    'Bebidas': '🧴',
-    'Higiene': '🧼',
-    'Limpeza': '🧹',
-    'Padaria': '🍞',
-    'Congelados': '🧊',
-    'Temperos': '🧄',
-    'Outros': '🛒',
-  };
-  return map[category] ?? '🛒';
-}
 
 const styles = StyleSheet.create({
   card: {
@@ -225,8 +210,15 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.sm,
   },
+  categoryBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   emoji: {
-    fontSize: 28,
+    fontSize: 20,
   },
   nameBlock: {
     flex: 1,

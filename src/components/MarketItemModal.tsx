@@ -15,6 +15,7 @@ import { ShoppingItem } from '../types';
 import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import { formatCurrency } from '../utils/formatters';
 import PriceTagBadge from './PriceTagBadge';
+import UnitCalculatorModal from './UnitCalculatorModal';
 
 interface MarketItemModalProps {
   visible: boolean;
@@ -34,6 +35,7 @@ export const MarketItemModal: React.FC<MarketItemModalProps> = ({
   const [qty, setQty] = useState('');
   const [price, setPrice] = useState('');
   const [reason, setReason] = useState('');
+  const [calcVisible, setCalcVisible] = useState(false);
 
   const REASON_OPTIONS = ['Em falta', 'Promoção', 'Preço Alto', 'Achei necessário', 'Outro'];
 
@@ -147,7 +149,15 @@ export const MarketItemModal: React.FC<MarketItemModalProps> = ({
           )}
 
           {/* Preço unitário */}
-          <Text style={styles.label}>Preço Unitário (R$)</Text>
+          <View style={styles.priceLabelRow}>
+            <Text style={styles.label}>Preço Unitário (R$)</Text>
+            <TouchableOpacity
+              style={styles.calcBtn}
+              onPress={() => setCalcVisible(true)}
+            >
+              <Text style={styles.calcBtnText}>🧮 Comparar embalagens</Text>
+            </TouchableOpacity>
+          </View>
           <TextInput
             style={styles.input}
             placeholder="0,00"
@@ -164,6 +174,13 @@ export const MarketItemModal: React.FC<MarketItemModalProps> = ({
               <Text style={styles.totalValue}>{formatCurrency(estimatedTotal)}</Text>
             </View>
           )}
+
+          {/* Calculadora de Unidade */}
+          <UnitCalculatorModal
+            visible={calcVisible}
+            onClose={() => setCalcVisible(false)}
+            onSelectPrice={(p) => setPrice(String(p))}
+          />
 
           {/* Botões */}
           <View style={styles.actions}>
@@ -242,11 +259,27 @@ const styles = StyleSheet.create({
     fontSize: Typography.sm,
     color: Colors.primaryDark,
   },
+  priceLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.sm,
+  },
+  calcBtn: {
+    backgroundColor: Colors.primaryLight,
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 4,
+  },
+  calcBtnText: {
+    fontSize: Typography.xs,
+    fontWeight: Typography.semibold,
+    color: Colors.primaryDark,
+  },
   label: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
     color: Colors.textSecondary,
-    marginBottom: Spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },

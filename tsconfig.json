@@ -5,9 +5,9 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "lib": ["es2021"],
-    "moduleResolution": "node",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "ignoreDeprecations": "6.0"
+    "resolveJsonModule": true
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,8 +9,9 @@ import {
   Animated,
   Platform,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useShoppingStore } from '../store/useShoppingStore';
 import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
@@ -18,32 +19,67 @@ import { formatCurrency } from '../utils/formatters';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { getCurrentUserId } from '../services/authService';
 import SupermarketPicker from '../components/SupermarketPicker';
+import PromotionsModal from '../components/PromotionsModal';
 import { Supermarket } from '../types';
+import { checkPriceAlerts, checkShoppingReminder, PriceAlert } from '../services/alertsService';
+import { getFavorites } from '../services/favoritesService';
+import { getActivePromotions } from '../services/promotionService';
+import { useThemeStore } from '../store/useThemeStore';
 
 type HomeNavProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
 const QUICK_AMOUNTS = [100, 150, 200, 300, 500];
-
 
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeNavProp>();
   const createSession = useShoppingStore((s) => s.createSession);
   const userId = getCurrentUserId();
 
+  const { isDark, toggle: toggleTheme, colors } = useThemeStore();
+
   const [rawValue, setRawValue] = useState('');
   const [pickerVisible, setPickerVisible] = useState(false);
+  const [promotionsVisible, setPromotionsVisible] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  // Formata o input como moeda enquanto digita
+  // Alertas e notificações
+  const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
+  const [showReminder, setShowReminder] = useState(false);
+  const [activePromosCount, setActivePromosCount] = useState(0);
+  const [alertsLoading, setAlertsLoading] = useState(false);
+
+  // Carrega alertas ao focar na tela
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      const loadAlerts = async () => {
+        setAlertsLoading(true);
+        try {
+          const [favs, promos, reminder] = await Promise.all([
+            getFavorites(),
+            getActivePromotions(),
+            checkShoppingReminder(),
+          ]);
+          const alerts = await checkPriceAlerts(favs);
+          if (active) {
+            setPriceAlerts(alerts);
+            setShowReminder(reminder);
+            setActivePromosCount(promos.length);
+          }
+        } catch { /* silencioso */ }
+        if (active) setAlertsLoading(false);
+      };
+      loadAlerts();
+      return () => { active = false; };
+    }, [])
+  );
+
   const handleChangeText = (text: string) => {
     const numeric = text.replace(/[^0-9]/g, '');
     setRawValue(numeric);
   };
 
-  const displayValue = rawValue
-    ? formatCurrency(parseFloat(rawValue) / 100)
-    : '';
-
+  const displayValue = rawValue ? formatCurrency(parseFloat(rawValue) / 100) : '';
   const budget = parseFloat(rawValue) / 100;
   const isValid = budget >= 1;
 
@@ -59,12 +95,7 @@ export const HomeScreen: React.FC = () => {
 
   const handleMarketSelected = (supermarket: Supermarket | null) => {
     setPickerVisible(false);
-    createSession(
-      budget,
-      userId || '',
-      supermarket?.id,
-      supermarket?.name
-    );
+    createSession(budget, userId || '', supermarket?.id, supermarket?.name);
     navigation.navigate('PreList');
   };
 
@@ -72,14 +103,24 @@ export const HomeScreen: React.FC = () => {
     setRawValue(String(amount * 100));
   };
 
-  return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.primaryDark} />
+  const dynStyles = getDynStyles(colors);
 
-      {/* Header verde */}
-      <View style={styles.header}>
-        <Text style={styles.appName}>🛒 MarketBudget</Text>
-        <Text style={styles.tagline}>Compras inteligentes, bolso no controle</Text>
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor={colors.primaryDark}
+      />
+
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: colors.primaryDark }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.appName}>🛒 MarketBudget</Text>
+          <Text style={styles.tagline}>Compras inteligentes, bolso no controle</Text>
+        </View>
+        <TouchableOpacity onPress={toggleTheme} style={styles.themeBtn}>
+          <Text style={styles.themeBtnIcon}>{isDark ? '☀️' : '🌙'}</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -88,20 +129,63 @@ export const HomeScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Banner: Lembrete de compra */}
+        {showReminder && (
+          <View style={[styles.alertBanner, { backgroundColor: colors.warningBg, borderColor: colors.warning }]}>
+            <Text style={styles.alertBannerIcon}>📅</Text>
+            <Text style={[styles.alertBannerText, { color: '#92400E' }]}>
+              Está na hora das compras! Você não faz compras há mais de 7 dias.
+            </Text>
+            <TouchableOpacity onPress={() => setShowReminder(false)}>
+              <Text style={styles.alertDismiss}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Banner: Alertas de preço em oferta */}
+        {priceAlerts.length > 0 && (
+          <View style={[styles.alertBanner, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}>
+            <Text style={styles.alertBannerIcon}>🔔</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.alertBannerText, { color: colors.primaryDark }]}>
+                {priceAlerts.length === 1
+                  ? `"${priceAlerts[0].productName}" está ${priceAlerts[0].savingPercent}% mais barato!`
+                  : `${priceAlerts.length} produtos favoritos com preço em baixa!`}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Banner: Promoções ativas */}
+        {activePromosCount > 0 && (
+          <TouchableOpacity
+            style={[styles.alertBanner, { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }]}
+            onPress={() => setPromotionsVisible(true)}
+          >
+            <Text style={styles.alertBannerIcon}>🏷️</Text>
+            <Text style={[styles.alertBannerText, { color: '#92400E', flex: 1 }]}>
+              {activePromosCount} promoção(ões) ativa(s) — toque para ver
+            </Text>
+            <Text style={{ color: '#92400E' }}>→</Text>
+          </TouchableOpacity>
+        )}
+
         {/* Card principal */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Qual é o orçamento de hoje?</Text>
-          <Text style={styles.cardSubtitle}>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+            Qual é o orçamento de hoje?
+          </Text>
+          <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
             Defina o limite máximo que você quer gastar nesta compra.
           </Text>
 
           {/* Input de valor */}
-          <View style={styles.inputWrapper}>
-            <Text style={styles.currencyPrefix}>R$</Text>
+          <View style={[styles.inputWrapper, { backgroundColor: colors.background, borderColor: colors.primary }]}>
+            <Text style={[styles.currencyPrefix, { color: colors.primary }]}>R$</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: colors.textPrimary }]}
               placeholder="0,00"
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={rawValue ? displayValue.replace('R$', '').trim() : ''}
               onChangeText={handleChangeText}
               keyboardType="numeric"
@@ -110,21 +194,23 @@ export const HomeScreen: React.FC = () => {
           </View>
 
           {/* Valores rápidos */}
-          <Text style={styles.quickLabel}>Valores rápidos</Text>
+          <Text style={[styles.quickLabel, { color: colors.textMuted }]}>Valores rápidos</Text>
           <View style={styles.quickRow}>
             {QUICK_AMOUNTS.map((amount) => (
               <TouchableOpacity
                 key={amount}
                 style={[
                   styles.quickChip,
-                  budget === amount && styles.quickChipActive,
+                  { backgroundColor: colors.background, borderColor: colors.border },
+                  budget === amount && { backgroundColor: colors.primaryLight, borderColor: colors.primary },
                 ]}
                 onPress={() => handleQuickAmount(amount)}
               >
                 <Text
                   style={[
                     styles.quickText,
-                    budget === amount && styles.quickTextActive,
+                    { color: colors.textSecondary },
+                    budget === amount && { color: colors.primaryDark },
                   ]}
                 >
                   {formatCurrency(amount)}
@@ -136,7 +222,11 @@ export const HomeScreen: React.FC = () => {
           {/* Botão principal */}
           <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
             <TouchableOpacity
-              style={[styles.startBtn, !isValid && styles.startBtnDisabled]}
+              style={[
+                styles.startBtn,
+                { backgroundColor: colors.primary },
+                !isValid && styles.startBtnDisabled,
+              ]}
               onPress={handleStart}
               disabled={!isValid}
               activeOpacity={0.85}
@@ -146,16 +236,41 @@ export const HomeScreen: React.FC = () => {
           </Animated.View>
         </View>
 
-        <TouchableOpacity 
-          style={styles.historyBtn} 
-          onPress={() => navigation.navigate('History')}
-        >
-          <Text style={styles.historyBtnText}>📅 Ver Histórico de Compras</Text>
-        </TouchableOpacity>
+        {/* Botões de navegação */}
+        <View style={styles.navRow}>
+          <TouchableOpacity
+            style={[styles.navBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={() => navigation.navigate('History')}
+          >
+            <Text style={styles.navBtnIcon}>📅</Text>
+            <Text style={[styles.navBtnText, { color: colors.textSecondary }]}>Histórico</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.navBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={() => navigation.navigate('Dashboard')}
+          >
+            <Text style={styles.navBtnIcon}>📊</Text>
+            <Text style={[styles.navBtnText, { color: colors.textSecondary }]}>Dashboard</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.navBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={() => setPromotionsVisible(true)}
+          >
+            <Text style={styles.navBtnIcon}>🏷️</Text>
+            <Text style={[styles.navBtnText, { color: colors.textSecondary }]}>Promoções</Text>
+            {activePromosCount > 0 && (
+              <View style={styles.navBadge}>
+                <Text style={styles.navBadgeText}>{activePromosCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
 
         {/* Dicas */}
-        <View style={styles.tipsCard}>
-          <Text style={styles.tipsTitle}>💡 Como funciona</Text>
+        <View style={[styles.tipsCard, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.tipsTitle, { color: colors.textPrimary }]}>💡 Como funciona</Text>
           {[
             { icon: '📋', text: 'Monte sua lista antes de ir ao mercado' },
             { icon: '🏪', text: 'No mercado, registre os preços reais' },
@@ -164,7 +279,7 @@ export const HomeScreen: React.FC = () => {
           ].map((tip, i) => (
             <View key={i} style={styles.tipRow}>
               <Text style={styles.tipIcon}>{tip.icon}</Text>
-              <Text style={styles.tipText}>{tip.text}</Text>
+              <Text style={[styles.tipText, { color: colors.textSecondary }]}>{tip.text}</Text>
             </View>
           ))}
         </View>
@@ -175,9 +290,18 @@ export const HomeScreen: React.FC = () => {
         onSelect={handleMarketSelected}
         onClose={() => setPickerVisible(false)}
       />
+
+      <PromotionsModal
+        visible={promotionsVisible}
+        onClose={() => setPromotionsVisible(false)}
+      />
     </View>
   );
 };
+
+function getDynStyles(colors: any) {
+  return StyleSheet.create({});
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -185,10 +309,10 @@ const styles = StyleSheet.create({
       web: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
       default: { flex: 1 },
     }),
-    backgroundColor: Colors.background,
   },
   header: {
-    backgroundColor: Colors.primaryDark,
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingTop: Spacing.xxxl + Spacing.lg,
     paddingBottom: Spacing.xl,
     paddingHorizontal: Spacing.xl,
@@ -207,14 +331,37 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
     fontWeight: Typography.medium,
   },
+  themeBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  themeBtnIcon: { fontSize: 20 },
   body: {
     flexGrow: 1,
     padding: Spacing.base,
     gap: Spacing.base,
-    paddingBottom: 100, // Safe area para o final do scroll
+    paddingBottom: 100,
   },
+  alertBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    borderWidth: 1,
+    gap: Spacing.sm,
+  },
+  alertBannerIcon: { fontSize: 18 },
+  alertBannerText: {
+    fontSize: Typography.sm,
+    fontWeight: Typography.medium,
+    lineHeight: 18,
+  },
+  alertDismiss: { fontSize: 14, color: '#92400E', fontWeight: Typography.bold, padding: 4 },
   card: {
-    backgroundColor: Colors.surface,
     borderRadius: BorderRadius.xl,
     padding: Spacing.xl,
     ...Shadow.md,
@@ -222,22 +369,18 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: Typography.xl,
     fontWeight: Typography.extrabold,
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   cardSubtitle: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
     lineHeight: 20,
     marginBottom: Spacing.xl,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
     borderRadius: BorderRadius.lg,
     borderWidth: 2,
-    borderColor: Colors.primary,
     paddingHorizontal: Spacing.base,
     marginBottom: Spacing.base,
     height: 64,
@@ -245,19 +388,16 @@ const styles = StyleSheet.create({
   currencyPrefix: {
     fontSize: Typography.xl,
     fontWeight: Typography.bold,
-    color: Colors.primary,
     marginRight: Spacing.sm,
   },
   input: {
     flex: 1,
     fontSize: Typography.xxl,
     fontWeight: Typography.extrabold,
-    color: Colors.textPrimary,
   },
   quickLabel: {
     fontSize: Typography.xs,
     fontWeight: Typography.semibold,
-    color: Colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
     marginBottom: Spacing.sm,
@@ -272,24 +412,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.background,
     borderWidth: 1.5,
-    borderColor: Colors.border,
-  },
-  quickChipActive: {
-    backgroundColor: Colors.primaryLight,
-    borderColor: Colors.primary,
   },
   quickText: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.textSecondary,
-  },
-  quickTextActive: {
-    color: Colors.primaryDark,
   },
   startBtn: {
-    backgroundColor: Colors.primary,
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.base + 4,
     alignItems: 'center',
@@ -300,28 +429,42 @@ const styles = StyleSheet.create({
     elevation: 0,
     shadowOpacity: 0,
   },
-  historyBtn: {
-    backgroundColor: 'rgba(255,255,255,0.7)',
-    paddingVertical: Spacing.base,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-  },
-  historyBtnText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.base,
-    fontWeight: Typography.bold,
-  },
   startText: {
     fontSize: Typography.md,
     fontWeight: Typography.extrabold,
     color: Colors.surface,
     letterSpacing: 0.3,
   },
+  navRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  navBtn: {
+    flex: 1,
+    paddingVertical: Spacing.base,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    gap: 4,
+  },
+  navBtnIcon: { fontSize: 22 },
+  navBtnText: {
+    fontSize: Typography.xs,
+    fontWeight: Typography.semibold,
+  },
+  navBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: Colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navBadgeText: { fontSize: 10, fontWeight: Typography.bold, color: Colors.surface },
   tipsCard: {
-    backgroundColor: Colors.surface,
     borderRadius: BorderRadius.xl,
     padding: Spacing.xl,
     ...Shadow.sm,
@@ -329,7 +472,6 @@ const styles = StyleSheet.create({
   tipsTitle: {
     fontSize: Typography.base,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
     marginBottom: Spacing.base,
   },
   tipRow: {
@@ -338,15 +480,10 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     marginBottom: Spacing.md,
   },
-  tipIcon: {
-    fontSize: 22,
-    width: 30,
-    textAlign: 'center',
-  },
+  tipIcon: { fontSize: 22, width: 30, textAlign: 'center' },
   tipText: {
     flex: 1,
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
     lineHeight: 20,
   },
 });

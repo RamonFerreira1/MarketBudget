@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,14 +9,11 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
-
-const CATEGORIES = [
-  'Grãos', 'Laticínios', 'Carnes', 'Frutas', 'Verduras',
-  'Bebidas', 'Higiene', 'Limpeza', 'Padaria', 'Congelados',
-  'Temperos', 'Outros',
-];
+import { CATEGORIES, getCategoryMeta } from '../constants/categories';
+import { getFavorites, toggleFavorite } from '../services/favoritesService';
 
 interface AddItemModalProps {
   visible: boolean;
@@ -35,7 +32,12 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   const [category, setCategory] = useState('Outros');
   const [qty, setQty] = useState('1');
 
-  React.useEffect(() => {
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [loadingFavs, setLoadingFavs] = useState(false);
+  const [showFavorites, setShowFavorites] = useState(false);
+  const [togglingFav, setTogglingFav] = useState(false);
+
+  useEffect(() => {
     if (visible) {
       if (initialItem) {
         setName(initialItem.name);
@@ -46,8 +48,24 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
         setCategory('Outros');
         setQty('1');
       }
+      // Load favorites when modal opens
+      setLoadingFavs(true);
+      getFavorites()
+        .then(setFavorites)
+        .finally(() => setLoadingFavs(false));
     }
   }, [visible, initialItem]);
+
+  const isCurrentFavorite = favorites.includes(name.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+
+  const handleToggleFavorite = async () => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setTogglingFav(true);
+    const updated = await toggleFavorite(trimmed);
+    setFavorites(updated);
+    setTogglingFav(false);
+  };
 
   const handleAdd = () => {
     const trimmed = name.trim();
@@ -55,6 +73,11 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
     const parsedQty = parseInt(qty, 10);
     onAdd(trimmed, category, isNaN(parsedQty) || parsedQty < 1 ? 1 : parsedQty);
     onClose();
+  };
+
+  const handlePickFavorite = (favName: string) => {
+    setName(favName);
+    setShowFavorites(false);
   };
 
   return (
@@ -69,17 +92,59 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
           <Text style={styles.title}>{initialItem ? 'Editar Item' : 'Adicionar Item'}</Text>
 
+          {/* Seção de Favoritos */}
+          {!initialItem && (
+            <TouchableOpacity
+              style={styles.favToggleBtn}
+              onPress={() => setShowFavorites(!showFavorites)}
+            >
+              <Text style={styles.favToggleText}>⭐ Favoritos</Text>
+              <Text style={styles.favToggleArrow}>{showFavorites ? '▲' : '▼'}</Text>
+            </TouchableOpacity>
+          )}
+
+          {showFavorites && (
+            <View style={styles.favSection}>
+              {loadingFavs ? (
+                <ActivityIndicator size="small" color={Colors.primary} />
+              ) : favorites.length === 0 ? (
+                <Text style={styles.favEmpty}>Nenhum favorito ainda. Adicione produtos com ⭐</Text>
+              ) : (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.favRow}>
+                  {favorites.map((fav) => (
+                    <TouchableOpacity
+                      key={fav}
+                      style={styles.favChip}
+                      onPress={() => handlePickFavorite(fav)}
+                    >
+                      <Text style={styles.favChipText}>⭐ {fav}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+          )}
+
           {/* Nome do produto */}
           <Text style={styles.label}>Nome do Produto</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Ex: Arroz Tio João 5kg"
-            placeholderTextColor={Colors.textMuted}
-            value={name}
-            onChangeText={setName}
-            autoFocus
-            returnKeyType="next"
-          />
+          <View style={styles.nameRow}>
+            <TextInput
+              style={[styles.input, styles.nameInput]}
+              placeholder="Ex: Arroz Tio João 5kg"
+              placeholderTextColor={Colors.textMuted}
+              value={name}
+              onChangeText={setName}
+              autoFocus={!showFavorites}
+              returnKeyType="next"
+            />
+            <TouchableOpacity
+              style={[styles.favBtn, isCurrentFavorite && styles.favBtnActive]}
+              onPress={handleToggleFavorite}
+              disabled={!name.trim() || togglingFav}
+            >
+              <Text style={styles.favBtnIcon}>{isCurrentFavorite ? '⭐' : '☆'}</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Quantidade */}
           <Text style={styles.label}>Quantidade Planejada</Text>
@@ -100,28 +165,33 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.categoryRow}
           >
-            {CATEGORIES.map((cat) => (
-              <TouchableOpacity
-                key={cat}
-                style={[
-                  styles.categoryChip,
-                  category === cat && styles.categoryChipActive,
-                ]}
-                onPress={() => setCategory(cat)}
-              >
-                <Text
+            {CATEGORIES.map((cat) => {
+              const meta = getCategoryMeta(cat);
+              const isActive = category === cat;
+              return (
+                <TouchableOpacity
+                  key={cat}
                   style={[
-                    styles.categoryText,
-                    category === cat && styles.categoryTextActive,
+                    styles.categoryChip,
+                    isActive && { backgroundColor: meta.color, borderColor: meta.textColor },
                   ]}
+                  onPress={() => setCategory(cat)}
                 >
-                  {cat}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text style={styles.categoryIcon}>{meta.icon}</Text>
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      isActive && { color: meta.textColor, fontWeight: Typography.semibold },
+                    ]}
+                  >
+                    {cat}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
 
-          {/* Aviso: preço será preenchido no mercado */}
+          {/* Aviso */}
           <View style={styles.notice}>
             <Text style={styles.noticeIcon}>ℹ️</Text>
             <Text style={styles.noticeText}>
@@ -174,7 +244,58 @@ const styles = StyleSheet.create({
     fontSize: Typography.xl,
     fontWeight: Typography.bold,
     color: Colors.textPrimary,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.base,
+  },
+  favToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFBEB',
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.sm,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    gap: Spacing.sm,
+  },
+  favToggleText: {
+    flex: 1,
+    fontSize: Typography.sm,
+    fontWeight: Typography.semibold,
+    color: '#92400E',
+  },
+  favToggleArrow: {
+    fontSize: Typography.xs,
+    color: '#92400E',
+  },
+  favSection: {
+    marginBottom: Spacing.base,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  favEmpty: {
+    fontSize: Typography.xs,
+    color: Colors.textMuted,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    paddingVertical: Spacing.sm,
+  },
+  favRow: {
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
+  favChip: {
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.xs,
+  },
+  favChipText: {
+    fontSize: Typography.sm,
+    color: '#92400E',
+    fontWeight: Typography.semibold,
   },
   label: {
     fontSize: Typography.sm,
@@ -183,6 +304,33 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.base,
+  },
+  nameInput: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  favBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.background,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  favBtnActive: {
+    backgroundColor: '#FFFBEB',
+    borderColor: '#FDE68A',
+  },
+  favBtnIcon: {
+    fontSize: 20,
   },
   input: {
     backgroundColor: Colors.background,
@@ -205,25 +353,23 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.base,
   },
   categoryChip: {
-    paddingHorizontal: Spacing.base,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
     backgroundColor: Colors.background,
     borderWidth: 1.5,
     borderColor: Colors.border,
   },
-  categoryChipActive: {
-    backgroundColor: Colors.primaryLight,
-    borderColor: Colors.primary,
+  categoryIcon: {
+    fontSize: 14,
   },
   categoryText: {
     fontSize: Typography.sm,
     color: Colors.textSecondary,
     fontWeight: Typography.medium,
-  },
-  categoryTextActive: {
-    color: Colors.primaryDark,
-    fontWeight: Typography.semibold,
   },
   notice: {
     flexDirection: 'row',
