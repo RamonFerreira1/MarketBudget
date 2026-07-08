@@ -14,7 +14,7 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useShoppingStore } from '../store/useShoppingStore';
-import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
+import { Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import { formatCurrency } from '../utils/formatters';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { getCurrentUserId } from '../services/authService';
@@ -24,7 +24,7 @@ import { Supermarket } from '../types';
 import { checkPriceAlerts, checkShoppingReminder, PriceAlert } from '../services/alertsService';
 import { getFavorites } from '../services/favoritesService';
 import { getActivePromotions } from '../services/promotionService';
-import { useThemeStore } from '../store/useThemeStore';
+import { useThemeStore, AppColors } from '../store/useThemeStore';
 
 type HomeNavProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -103,7 +103,7 @@ export const HomeScreen: React.FC = () => {
     setRawValue(String(amount * 100));
   };
 
-  const dynStyles = getDynStyles(colors);
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -299,11 +299,7 @@ export const HomeScreen: React.FC = () => {
   );
 };
 
-function getDynStyles(colors: any) {
-  return StyleSheet.create({});
-}
-
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   container: {
     ...Platform.select({
       web: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
@@ -322,7 +318,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: Typography.xxl,
     fontWeight: Typography.extrabold,
-    color: Colors.surface,
+    color: colors.surface,
     letterSpacing: -0.5,
   },
   tagline: {
@@ -432,7 +428,7 @@ const styles = StyleSheet.create({
   startText: {
     fontSize: Typography.md,
     fontWeight: Typography.extrabold,
-    color: Colors.surface,
+    color: colors.surface,
     letterSpacing: 0.3,
   },
   navRow: {
@@ -459,11 +455,11 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: Colors.danger,
+    backgroundColor: colors.danger,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  navBadgeText: { fontSize: 10, fontWeight: Typography.bold, color: Colors.surface },
+  navBadgeText: { fontSize: 10, fontWeight: Typography.bold, color: colors.surface },
   tipsCard: {
     borderRadius: BorderRadius.xl,
     padding: Spacing.xl,
