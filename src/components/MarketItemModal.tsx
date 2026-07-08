@@ -16,6 +16,7 @@ import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import { formatCurrency } from '../utils/formatters';
 import PriceTagBadge from './PriceTagBadge';
 import UnitCalculatorModal from './UnitCalculatorModal';
+import { useAppColors, AppColors } from '../store/useThemeStore';
 
 interface MarketItemModalProps {
   visible: boolean;
@@ -36,6 +37,9 @@ export const MarketItemModal: React.FC<MarketItemModalProps> = ({
   const [price, setPrice] = useState('');
   const [reason, setReason] = useState('');
   const [calcVisible, setCalcVisible] = useState(false);
+
+  const colors = useAppColors();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const REASON_OPTIONS = ['Em falta', 'Promoção', 'Preço Alto', 'Achei necessário', 'Outro'];
 
@@ -86,7 +90,7 @@ export const MarketItemModal: React.FC<MarketItemModalProps> = ({
           {/* Loading de variação */}
           {loadingVariation && (
             <View style={styles.loadingRow}>
-              <ActivityIndicator size="small" color={Colors.primary} />
+              <ActivityIndicator size="small" color={colors.primary} />
               <Text style={styles.loadingText}>Consultando histórico de preços...</Text>
             </View>
           )}
@@ -140,7 +144,7 @@ export const MarketItemModal: React.FC<MarketItemModalProps> = ({
                 <TextInput
                   style={[styles.input, { marginTop: Spacing.sm }]}
                   placeholder="Qual o motivo?"
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   value={reason === 'Outro' ? '' : reason}
                   onChangeText={setReason}
                 />
@@ -161,7 +165,7 @@ export const MarketItemModal: React.FC<MarketItemModalProps> = ({
           <TextInput
             style={styles.input}
             placeholder="0,00"
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             value={price}
             onChangeText={setPrice}
             keyboardType="decimal-pad"
@@ -201,14 +205,14 @@ export const MarketItemModal: React.FC<MarketItemModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: Colors.overlay,
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: Spacing.xl,
@@ -218,7 +222,7 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: Colors.border,
+    backgroundColor: colors.border,
     borderRadius: BorderRadius.full,
     alignSelf: 'center',
     marginBottom: Spacing.lg,
@@ -235,7 +239,7 @@ const styles = StyleSheet.create({
   },
   category: {
     fontSize: Typography.xs,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontWeight: Typography.medium,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
@@ -243,7 +247,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: Typography.lg,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginTop: 2,
   },
   loadingRow: {
@@ -252,12 +256,12 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     marginBottom: Spacing.base,
     padding: Spacing.md,
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     borderRadius: BorderRadius.md,
   },
   loadingText: {
     fontSize: Typography.sm,
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
   },
   priceLabelRow: {
     flexDirection: 'row',
@@ -266,7 +270,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   calcBtn: {
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     borderRadius: BorderRadius.sm,
     paddingHorizontal: Spacing.md,
     paddingVertical: 4,
@@ -274,12 +278,12 @@ const styles = StyleSheet.create({
   calcBtnText: {
     fontSize: Typography.xs,
     fontWeight: Typography.semibold,
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
   },
   label: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
@@ -293,46 +297,46 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: BorderRadius.md,
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   qtyBtnText: {
     fontSize: 24,
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: Typography.bold,
     lineHeight: 28,
   },
   qtyInput: {
     flex: 1,
     height: 48,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.md,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     fontSize: Typography.lg,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   input: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.md,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.md,
     fontSize: Typography.lg,
     fontWeight: Typography.semibold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: Spacing.base,
   },
   reasonContainer: {
     marginBottom: Spacing.base,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   reasonRow: {
     gap: Spacing.sm,
@@ -342,41 +346,41 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   reasonChipActive: {
-    backgroundColor: Colors.primaryLight,
-    borderColor: Colors.primary,
+    backgroundColor: colors.primaryLight,
+    borderColor: colors.primary,
   },
   reasonText: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.medium,
   },
   reasonTextActive: {
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
     fontWeight: Typography.bold,
   },
   totalPreview: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     borderRadius: BorderRadius.md,
     padding: Spacing.base,
     marginBottom: Spacing.lg,
   },
   totalLabel: {
     fontSize: Typography.sm,
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
     fontWeight: Typography.medium,
   },
   totalValue: {
     fontSize: Typography.lg,
     fontWeight: Typography.extrabold,
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
   },
   actions: {
     flexDirection: 'row',
@@ -387,19 +391,19 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.base,
     borderRadius: BorderRadius.lg,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     alignItems: 'center',
   },
   cancelText: {
     fontSize: Typography.base,
     fontWeight: Typography.semibold,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   confirmBtn: {
     flex: 2,
     paddingVertical: Spacing.base,
     borderRadius: BorderRadius.lg,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
   },
   confirmBtnDisabled: {
@@ -408,7 +412,7 @@ const styles = StyleSheet.create({
   confirmText: {
     fontSize: Typography.base,
     fontWeight: Typography.bold,
-    color: Colors.surface,
+    color: colors.surface,
   },
 });
 

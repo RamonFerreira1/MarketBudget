@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import { formatCurrency } from '../utils/formatters';
+import { useAppColors, AppColors } from '../store/useThemeStore';
 
 interface PackageOption {
   label: string;
@@ -35,6 +36,9 @@ const UnitCalculatorModal: React.FC<UnitCalculatorModalProps> = ({
     { label: 'Embalagem B', weight: '', price: '' },
   ]);
   const [unit, setUnit] = useState<'g' | 'ml' | 'un'>('g');
+
+  const colors = useAppColors();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const updatePackage = (idx: number, field: keyof PackageOption, value: string) => {
     setPackages((prev) =>
@@ -141,7 +145,7 @@ const UnitCalculatorModal: React.FC<UnitCalculatorModalProps> = ({
                       <TextInput
                         style={styles.pkgInput}
                         placeholder="ex: 500"
-                        placeholderTextColor={Colors.textMuted}
+                        placeholderTextColor={colors.textMuted}
                         value={pkg.weight}
                         onChangeText={(v) => updatePackage(idx, 'weight', v)}
                         keyboardType="decimal-pad"
@@ -152,7 +156,7 @@ const UnitCalculatorModal: React.FC<UnitCalculatorModalProps> = ({
                       <TextInput
                         style={styles.pkgInput}
                         placeholder="ex: 4,99"
-                        placeholderTextColor={Colors.textMuted}
+                        placeholderTextColor={colors.textMuted}
                         value={pkg.price}
                         onChangeText={(v) => updatePackage(idx, 'price', v)}
                         keyboardType="decimal-pad"
@@ -162,10 +166,10 @@ const UnitCalculatorModal: React.FC<UnitCalculatorModalProps> = ({
 
                   {pricePerUnit !== null && (
                     <View style={[styles.resultRow, isCheapest && styles.resultRowCheapest]}>
-                      <Text style={[styles.resultLabel, isCheapest && { color: Colors.primaryDark }]}>
+                      <Text style={[styles.resultLabel, isCheapest && { color: colors.primaryDark }]}>
                         Preço por {unitLabel}
                       </Text>
-                      <Text style={[styles.resultValue, isCheapest && { color: Colors.primaryDark }]}>
+                      <Text style={[styles.resultValue, isCheapest && { color: colors.primaryDark }]}>
                         {formatCurrency(pricePerUnit)}
                       </Text>
                     </View>
@@ -208,14 +212,14 @@ const UnitCalculatorModal: React.FC<UnitCalculatorModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: Colors.overlay,
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: Spacing.xl,
@@ -226,7 +230,7 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: Colors.border,
+    backgroundColor: colors.border,
     borderRadius: BorderRadius.full,
     alignSelf: 'center',
     marginBottom: Spacing.lg,
@@ -240,24 +244,24 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Typography.lg,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   subtitle: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeIcon: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.bold,
   },
   unitRow: {
@@ -269,33 +273,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   unitChipActive: {
-    backgroundColor: Colors.primaryLight,
-    borderColor: Colors.primary,
+    backgroundColor: colors.primaryLight,
+    borderColor: colors.primary,
   },
   unitChipText: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   unitChipTextActive: {
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
   },
   pkgCard: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.lg,
     padding: Spacing.base,
     marginBottom: Spacing.md,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   pkgCardCheapest: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primaryLight,
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
   },
   pkgHeader: {
     flexDirection: 'row',
@@ -307,26 +311,26 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: Colors.inactive,
+    backgroundColor: colors.inactive,
   },
   pkgDotCheapest: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
   },
   pkgLabel: {
     flex: 1,
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   pkgLabelCheapest: {
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
   },
   removePkgBtn: {
     padding: Spacing.xs,
   },
   removePkgText: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   pkgInputRow: {
     flexDirection: 'row',
@@ -337,64 +341,64 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: Typography.xs,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginBottom: 4,
     fontWeight: Typography.medium,
   },
   pkgInput: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.md,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     fontSize: Typography.base,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   resultRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: Spacing.sm,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.sm,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
   },
   resultRowCheapest: {
-    backgroundColor: Colors.primary + '20',
+    backgroundColor: colors.primary + '20',
   },
   resultLabel: {
     fontSize: Typography.xs,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontWeight: Typography.medium,
   },
   resultValue: {
     fontSize: Typography.sm,
     fontWeight: Typography.extrabold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   useBtn: {
     marginTop: Spacing.sm,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.md,
     paddingVertical: Spacing.sm,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
   },
   useBtnCheapest: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
   },
   useBtnText: {
     fontSize: Typography.sm,
     fontWeight: Typography.bold,
-    color: Colors.primary,
+    color: colors.primary,
   },
   addPkgBtn: {
     borderRadius: BorderRadius.lg,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderStyle: 'dashed',
     padding: Spacing.base,
     alignItems: 'center',
@@ -403,20 +407,20 @@ const styles = StyleSheet.create({
   addPkgText: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   summaryCard: {
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     borderRadius: BorderRadius.lg,
     padding: Spacing.base,
     marginBottom: Spacing.base,
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
   },
   summaryText: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
     textAlign: 'center',
   },
 });

@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { PriceVariation } from '../types';
-import { Colors, Typography, Spacing, BorderRadius } from '../theme';
+import { Typography, Spacing, BorderRadius } from '../theme';
+import { useAppColors } from '../store/useThemeStore';
 
 interface PriceTagBadgeProps {
   variation: PriceVariation;
@@ -12,9 +13,11 @@ export const PriceTagBadge: React.FC<PriceTagBadgeProps> = ({
   variation,
   size = 'md',
 }) => {
+  const colors = useAppColors();
+  
   const isUp = variation.direction === 'up';
-  const bgColor = isUp ? Colors.priceUpBg : Colors.priceDownBg;
-  const textColor = isUp ? Colors.priceUp : Colors.priceDown;
+  const bgColor = isUp ? colors.priceUpBg : colors.priceDownBg;
+  const textColor = isUp ? colors.priceUp : colors.priceDown;
   const arrow = isUp ? '⬆' : '⬇';
 
   const isSmall = size === 'sm';

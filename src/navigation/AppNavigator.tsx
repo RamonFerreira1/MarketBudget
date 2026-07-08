@@ -12,7 +12,7 @@ import DashboardScreen from '../screens/DashboardScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import { subscribeToAuthChanges } from '../services/authService';
-import { Colors } from '../theme';
+import { useAppColors } from '../store/useThemeStore';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -32,6 +32,8 @@ export const AppNavigator: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [initializing, setInitializing] = useState(true);
 
+  const colors = useAppColors();
+
   useEffect(() => {
     const unsubscribe = subscribeToAuthChanges((usr) => {
       setUser(usr);
@@ -42,8 +44,8 @@ export const AppNavigator: React.FC = () => {
 
   if (initializing) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background }}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }

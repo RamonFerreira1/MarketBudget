@@ -26,6 +26,7 @@ import { getFavorites } from '../services/favoritesService';
 import { getActivePromotions, Promotion } from '../services/promotionService';
 import { getCategoryMeta } from '../constants/categories';
 import { TemplateItem } from '../services/templateService';
+import { useAppColors, AppColors } from '../store/useThemeStore';
 
 type PreListNavProp = StackNavigationProp<RootStackParamList, 'PreList'>;
 
@@ -46,6 +47,9 @@ export const PreListScreen: React.FC = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [loadingFavs, setLoadingFavs] = useState(false);
+
+  const colors = useAppColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Carrega favoritos e promoções ao focar
   useFocusEffect(
@@ -127,7 +131,7 @@ export const PreListScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.primaryDark} />
+      <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -155,7 +159,7 @@ export const PreListScreen: React.FC = () => {
         <TextInput
           style={styles.searchInput}
           placeholder="Buscar item ou categoria..."
-          placeholderTextColor={Colors.textMuted}
+          placeholderTextColor={colors.textMuted}
           value={searchQuery}
           onChangeText={setSearchQuery}
           returnKeyType="search"
@@ -177,7 +181,7 @@ export const PreListScreen: React.FC = () => {
             contentContainerStyle={styles.favRow}
           >
             {loadingFavs ? (
-              <ActivityIndicator size="small" color={Colors.primary} />
+              <ActivityIndicator size="small" color={colors.primary} />
             ) : (
               favorites.map((fav) => {
                 const alreadyInList = items.some((i) => i.name.toLowerCase() === fav.toLowerCase());
@@ -267,10 +271,10 @@ export const PreListScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
-    backgroundColor: Colors.primaryDark,
+    backgroundColor: colors.primaryDark,
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: Spacing.xxxl,
@@ -281,8 +285,8 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
   },
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 24, color: Colors.surface, fontWeight: Typography.bold },
-  headerTitle: { fontSize: Typography.lg, fontWeight: Typography.extrabold, color: Colors.surface },
+  backIcon: { fontSize: 24, color: colors.surface, fontWeight: Typography.bold },
+  headerTitle: { fontSize: Typography.lg, fontWeight: Typography.extrabold, color: colors.surface },
   headerSub: { fontSize: Typography.sm, color: 'rgba(255,255,255,0.7)', marginTop: 1 },
   templateBtn: {
     width: 40,
@@ -302,18 +306,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: Spacing.sm,
   },
-  countText: { fontSize: Typography.base, fontWeight: Typography.bold, color: Colors.surface },
+  countText: { fontSize: Typography.base, fontWeight: Typography.bold, color: colors.surface },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.lg,
     marginHorizontal: Spacing.base,
     marginTop: Spacing.base,
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.sm,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     ...Shadow.sm,
     gap: Spacing.sm,
   },
@@ -321,18 +325,18 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: Typography.base,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     paddingVertical: 0,
   },
   searchClear: {
     width: 22,
     height: 22,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.border,
+    backgroundColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  searchClearText: { fontSize: 11, color: Colors.textSecondary, fontWeight: Typography.bold },
+  searchClearText: { fontSize: 11, color: colors.textSecondary, fontWeight: Typography.bold },
   favSection: {
     marginTop: Spacing.md,
     paddingHorizontal: Spacing.base,
@@ -340,7 +344,7 @@ const styles = StyleSheet.create({
   favLabel: {
     fontSize: Typography.xs,
     fontWeight: Typography.semibold,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
     marginBottom: Spacing.xs,
@@ -355,11 +359,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   favChipAdded: {
-    backgroundColor: Colors.primaryLight,
-    borderColor: Colors.primary,
+    backgroundColor: colors.primaryLight,
+    borderColor: colors.primary,
   },
   favChipText: { fontSize: Typography.xs, color: '#92400E', fontWeight: Typography.semibold },
-  favChipTextAdded: { color: Colors.primaryDark },
+  favChipTextAdded: { color: colors.primaryDark },
   promoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -385,39 +389,39 @@ const styles = StyleSheet.create({
     marginTop: 60,
   },
   emptyEmoji: { fontSize: 64, marginBottom: Spacing.base },
-  emptyTitle: { fontSize: Typography.xl, fontWeight: Typography.bold, color: Colors.textPrimary, marginBottom: Spacing.sm },
-  emptySubtitle: { fontSize: Typography.base, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22 },
+  emptyTitle: { fontSize: Typography.xl, fontWeight: Typography.bold, color: colors.textPrimary, marginBottom: Spacing.sm },
+  emptySubtitle: { fontSize: Typography.base, color: colors.textSecondary, textAlign: 'center', lineHeight: 22 },
   footer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.base,
     paddingBottom: Spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     gap: Spacing.sm,
     ...Shadow.md,
   },
   addBtn: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.base,
     alignItems: 'center',
   },
-  addText: { fontSize: Typography.base, fontWeight: Typography.bold, color: Colors.primary },
+  addText: { fontSize: Typography.base, fontWeight: Typography.bold, color: colors.primary },
   marketBtn: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.base + 4,
     alignItems: 'center',
     ...Shadow.md,
   },
-  marketText: { fontSize: Typography.md, fontWeight: Typography.extrabold, color: Colors.surface },
+  marketText: { fontSize: Typography.md, fontWeight: Typography.extrabold, color: colors.surface },
 });
 
 export default PreListScreen;

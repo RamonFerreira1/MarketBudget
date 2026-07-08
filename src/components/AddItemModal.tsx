@@ -14,6 +14,7 @@ import {
 import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import { CATEGORIES, getCategoryMeta } from '../constants/categories';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
+import { useAppColors, AppColors } from '../store/useThemeStore';
 
 interface AddItemModalProps {
   visible: boolean;
@@ -36,6 +37,9 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   const [loadingFavs, setLoadingFavs] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
   const [togglingFav, setTogglingFav] = useState(false);
+
+  const colors = useAppColors();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     if (visible) {
@@ -106,7 +110,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
           {showFavorites && (
             <View style={styles.favSection}>
               {loadingFavs ? (
-                <ActivityIndicator size="small" color={Colors.primary} />
+                <ActivityIndicator size="small" color={colors.primary} />
               ) : favorites.length === 0 ? (
                 <Text style={styles.favEmpty}>Nenhum favorito ainda. Adicione produtos com ⭐</Text>
               ) : (
@@ -131,7 +135,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             <TextInput
               style={[styles.input, styles.nameInput]}
               placeholder="Ex: Arroz Tio João 5kg"
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={name}
               onChangeText={setName}
               autoFocus={!showFavorites}
@@ -151,7 +155,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
           <TextInput
             style={[styles.input, styles.qtyInput]}
             placeholder="1"
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             value={qty}
             onChangeText={setQty}
             keyboardType="numeric"
@@ -218,14 +222,14 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: Colors.overlay,
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: Spacing.xl,
@@ -235,7 +239,7 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: Colors.border,
+    backgroundColor: colors.border,
     borderRadius: BorderRadius.full,
     alignSelf: 'center',
     marginBottom: Spacing.lg,
@@ -243,7 +247,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Typography.xl,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: Spacing.base,
   },
   favToggleBtn: {
@@ -275,7 +279,7 @@ const styles = StyleSheet.create({
   },
   favEmpty: {
     fontSize: Typography.xs,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: Spacing.sm,
@@ -300,7 +304,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: Spacing.xs,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
@@ -319,9 +323,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: BorderRadius.md,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -333,14 +337,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   input: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.md,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.md,
     fontSize: Typography.base,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: Spacing.base,
   },
   qtyInput: {
@@ -359,23 +363,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   categoryIcon: {
     fontSize: 14,
   },
   categoryText: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.medium,
   },
   notice: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
     marginBottom: Spacing.lg,
@@ -386,7 +390,7 @@ const styles = StyleSheet.create({
   noticeText: {
     flex: 1,
     fontSize: Typography.sm,
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
     fontWeight: Typography.medium,
   },
   actions: {
@@ -398,19 +402,19 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.base,
     borderRadius: BorderRadius.lg,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     alignItems: 'center',
   },
   cancelText: {
     fontSize: Typography.base,
     fontWeight: Typography.semibold,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   addBtn: {
     flex: 2,
     paddingVertical: Spacing.base,
     borderRadius: BorderRadius.lg,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
   },
   addBtnDisabled: {
@@ -419,7 +423,7 @@ const styles = StyleSheet.create({
   addText: {
     fontSize: Typography.base,
     fontWeight: Typography.bold,
-    color: Colors.surface,
+    color: colors.surface,
   },
 });
 

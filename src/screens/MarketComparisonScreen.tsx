@@ -14,12 +14,16 @@ import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import { formatCurrency } from '../utils/formatters';
 import { getAllMarketsComparison } from '../services/priceHistoryService';
 import { ProductMarketComparison, MarketPriceStat } from '../types';
+import { useAppColors, AppColors } from '../store/useThemeStore';
 
 const MarketComparisonScreen: React.FC = () => {
   const navigation = useNavigation();
   const [comparisons, setComparisons] = useState<ProductMarketComparison[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  const colors = useAppColors();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const loadData = async () => {
     setLoading(true);
@@ -44,9 +48,9 @@ const MarketComparisonScreen: React.FC = () => {
   };
 
   const trendColor = (stat: MarketPriceStat) => {
-    if (stat.trend === 'up') return Colors.priceUp;
-    if (stat.trend === 'down') return Colors.priceDown;
-    return Colors.textMuted;
+    if (stat.trend === 'up') return colors.priceUp;
+    if (stat.trend === 'down') return colors.priceDown;
+    return colors.textMuted;
   };
 
   const renderStat = (stat: MarketPriceStat, isFirst: boolean, isLast: boolean, comparison: ProductMarketComparison) => {
@@ -76,7 +80,7 @@ const MarketComparisonScreen: React.FC = () => {
           </Text>
         </View>
         <View style={styles.statRight}>
-          <Text style={[styles.statPrice, isCheapest && { color: Colors.priceDown }, isMostExpensive && !isCheapest && { color: Colors.priceUp }]}>
+          <Text style={[styles.statPrice, isCheapest && { color: colors.priceDown }, isMostExpensive && !isCheapest && { color: colors.priceUp }]}>
             {formatCurrency(stat.lastPrice)}
           </Text>
           <Text style={styles.statAvg}>média {formatCurrency(stat.avgPrice)}</Text>
@@ -99,7 +103,7 @@ const MarketComparisonScreen: React.FC = () => {
             <Text style={styles.productName}>{item.productName}</Text>
             <Text style={styles.productSummary}>
               🏪 {item.cheapestMarket} é{' '}
-              <Text style={{ color: Colors.priceDown, fontWeight: Typography.bold }}>
+              <Text style={{ color: colors.priceDown, fontWeight: Typography.bold }}>
                 {formatCurrency(item.priceDiff)} ({item.priceDiffPercent}%)
               </Text>{' '}
               mais barato
@@ -125,7 +129,7 @@ const MarketComparisonScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.primaryDark} />
+      <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -140,7 +144,7 @@ const MarketComparisonScreen: React.FC = () => {
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Analisando preços...</Text>
         </View>
       ) : comparisons.length === 0 ? (
@@ -171,16 +175,16 @@ const MarketComparisonScreen: React.FC = () => {
 
 export default MarketComparisonScreen;
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   container: {
     ...Platform.select({
       web: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
       default: { flex: 1 },
     }),
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: Colors.primaryDark,
+    backgroundColor: colors.primaryDark,
     paddingTop: Spacing.xxxl + Spacing.base,
     paddingBottom: Spacing.xl,
     paddingHorizontal: Spacing.xl,
@@ -199,14 +203,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   backIcon: {
-    color: Colors.surface,
+    color: colors.surface,
     fontSize: Typography.lg,
     fontWeight: Typography.bold,
   },
   headerTitle: {
     fontSize: Typography.lg,
     fontWeight: Typography.extrabold,
-    color: Colors.surface,
+    color: colors.surface,
   },
   headerSub: {
     fontSize: Typography.xs,
@@ -221,7 +225,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: Spacing.base,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontSize: Typography.sm,
   },
   emptyIcon: {
@@ -231,13 +235,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: Typography.xl,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: Spacing.sm,
     textAlign: 'center',
   },
   emptyDesc: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -249,13 +253,13 @@ const styles = StyleSheet.create({
   listHeader: {
     fontSize: Typography.xs,
     fontWeight: Typography.semibold,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: Spacing.sm,
   },
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.xl,
     padding: Spacing.base,
     ...Shadow.md,
@@ -274,25 +278,25 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: Typography.md,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     textTransform: 'capitalize',
     marginBottom: 2,
   },
   productSummary: {
     fontSize: Typography.xs,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 18,
   },
   expandIcon: {
     fontSize: Typography.xs,
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   statsContainer: {
     marginTop: Spacing.sm,
   },
   statsDivider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: colors.border,
     marginBottom: Spacing.sm,
   },
   statRow: {
@@ -304,10 +308,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statRowCheapest: {
-    backgroundColor: Colors.priceDownBg,
+    backgroundColor: colors.priceDownBg,
   },
   statRowExpensive: {
-    backgroundColor: Colors.priceUpBg,
+    backgroundColor: colors.priceUpBg,
   },
   statLeft: {
     flex: 1,
@@ -321,29 +325,29 @@ const styles = StyleSheet.create({
   statMarket: {
     fontSize: Typography.sm,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   badgeCheap: {
     fontSize: 10,
     fontWeight: Typography.bold,
-    color: Colors.priceDown,
-    backgroundColor: Colors.priceDownBg,
+    color: colors.priceDown,
+    backgroundColor: colors.priceDownBg,
     borderRadius: BorderRadius.full,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderWidth: 1,
-    borderColor: Colors.priceDown,
+    borderColor: colors.priceDown,
   },
   badgeExpensive: {
     fontSize: 10,
     fontWeight: Typography.bold,
-    color: Colors.priceUp,
-    backgroundColor: Colors.priceUpBg,
+    color: colors.priceUp,
+    backgroundColor: colors.priceUpBg,
     borderRadius: BorderRadius.full,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderWidth: 1,
-    borderColor: Colors.priceUp,
+    borderColor: colors.priceUp,
   },
   statTrend: {
     fontSize: Typography.xs,
@@ -355,11 +359,11 @@ const styles = StyleSheet.create({
   statPrice: {
     fontSize: Typography.md,
     fontWeight: Typography.extrabold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   statAvg: {
     fontSize: Typography.xs,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
 });

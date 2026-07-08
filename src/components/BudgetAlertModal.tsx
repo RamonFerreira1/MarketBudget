@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import { formatCurrency } from '../utils/formatters';
+import { useAppColors, AppColors } from '../store/useThemeStore';
 
 interface BudgetAlertModalProps {
   visible: boolean;
@@ -24,6 +25,9 @@ export const BudgetAlertModal: React.FC<BudgetAlertModalProps> = ({
   onRemoveItems,
 }) => {
   const shakeAnim = React.useRef(new Animated.Value(0)).current;
+
+  const colors = useAppColors();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   React.useEffect(() => {
     if (visible) {
@@ -74,29 +78,29 @@ export const BudgetAlertModal: React.FC<BudgetAlertModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: Colors.overlay,
+    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.xl,
   },
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.xl,
     padding: Spacing.xl,
     width: '100%',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: Colors.danger,
+    borderColor: colors.danger,
     ...Shadow.lg,
   },
   iconContainer: {
     width: 72,
     height: 72,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.dangerBg,
+    backgroundColor: colors.dangerBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.base,
@@ -107,24 +111,24 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Typography.xl,
     fontWeight: Typography.extrabold,
-    color: Colors.danger,
+    color: colors.danger,
     marginBottom: Spacing.sm,
     textAlign: 'center',
   },
   message: {
     fontSize: Typography.base,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   amount: {
     fontSize: Typography.xxl,
     fontWeight: Typography.extrabold,
-    color: Colors.danger,
+    color: colors.danger,
     marginVertical: Spacing.xs,
   },
   subMessage: {
     fontSize: Typography.sm,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
     marginBottom: Spacing.lg,
     lineHeight: 20,
@@ -133,14 +137,14 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: Spacing.base,
     borderRadius: BorderRadius.lg,
-    backgroundColor: Colors.danger,
+    backgroundColor: colors.danger,
     alignItems: 'center',
     marginBottom: Spacing.md,
   },
   reviewText: {
     fontSize: Typography.base,
     fontWeight: Typography.bold,
-    color: Colors.surface,
+    color: colors.surface,
   },
   continueBtn: {
     width: '100%',
@@ -149,7 +153,7 @@ const styles = StyleSheet.create({
   },
   continueText: {
     fontSize: Typography.sm,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontWeight: Typography.medium,
   },
 });

@@ -20,6 +20,7 @@ import {
   Promotion,
 } from '../services/promotionService';
 import { formatCurrency } from '../utils/formatters';
+import { useAppColors, AppColors } from '../store/useThemeStore';
 
 interface PromotionsModalProps {
   visible: boolean;
@@ -37,6 +38,9 @@ const PromotionsModal: React.FC<PromotionsModalProps> = ({ visible, onClose }) =
   const [market, setMarket] = useState('');
   const [expiryDays, setExpiryDays] = useState('7');
   const [saving, setSaving] = useState(false);
+
+  const colors = useAppColors();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     if (visible) {
@@ -104,9 +108,9 @@ const PromotionsModal: React.FC<PromotionsModalProps> = ({ visible, onClose }) =
 
   const getDaysColor = (expiresAt: string) => {
     const days = daysUntilExpiry(expiresAt);
-    if (days <= 1) return Colors.danger;
-    if (days <= 3) return Colors.warning;
-    return Colors.primary;
+    if (days <= 1) return colors.danger;
+    if (days <= 3) return colors.warning;
+    return colors.primary;
   };
 
   return (
@@ -141,7 +145,7 @@ const PromotionsModal: React.FC<PromotionsModalProps> = ({ visible, onClose }) =
               <TextInput
                 style={styles.input}
                 placeholder="Ex: Arroz Tio João 5kg"
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={productName}
                 onChangeText={setProductName}
                 autoFocus
@@ -153,7 +157,7 @@ const PromotionsModal: React.FC<PromotionsModalProps> = ({ visible, onClose }) =
                   <TextInput
                     style={styles.input}
                     placeholder="0,00"
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                     value={price}
                     onChangeText={setPrice}
                     keyboardType="decimal-pad"
@@ -164,7 +168,7 @@ const PromotionsModal: React.FC<PromotionsModalProps> = ({ visible, onClose }) =
                   <TextInput
                     style={styles.input}
                     placeholder="7"
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                     value={expiryDays}
                     onChangeText={setExpiryDays}
                     keyboardType="numeric"
@@ -176,7 +180,7 @@ const PromotionsModal: React.FC<PromotionsModalProps> = ({ visible, onClose }) =
               <TextInput
                 style={styles.input}
                 placeholder="Ex: Carrefour"
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={market}
                 onChangeText={setMarket}
               />
@@ -194,7 +198,7 @@ const PromotionsModal: React.FC<PromotionsModalProps> = ({ visible, onClose }) =
                   disabled={saving}
                 >
                   {saving
-                    ? <ActivityIndicator size="small" color={Colors.surface} />
+                    ? <ActivityIndicator size="small" color={colors.surface} />
                     : <Text style={styles.saveBtnText}>💾 Salvar</Text>
                   }
                 </TouchableOpacity>
@@ -204,7 +208,7 @@ const PromotionsModal: React.FC<PromotionsModalProps> = ({ visible, onClose }) =
 
           {/* Lista de promoções */}
           {loading ? (
-            <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: Spacing.xl }} />
+            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: Spacing.xl }} />
           ) : promotions.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyEmoji}>🏷️</Text>
@@ -249,14 +253,14 @@ const PromotionsModal: React.FC<PromotionsModalProps> = ({ visible, onClose }) =
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: Colors.overlay,
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: Spacing.xl,
@@ -267,7 +271,7 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: Colors.border,
+    backgroundColor: colors.border,
     borderRadius: BorderRadius.full,
     alignSelf: 'center',
     marginBottom: Spacing.lg,
@@ -281,53 +285,53 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Typography.xl,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   subtitle: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeIcon: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.bold,
   },
   addPromoBtn: {
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     borderRadius: BorderRadius.md,
     padding: Spacing.base,
     marginBottom: Spacing.base,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
     borderStyle: 'dashed',
   },
   addPromoBtnText: {
     fontSize: Typography.base,
     fontWeight: Typography.bold,
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
   },
   form: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.lg,
     padding: Spacing.base,
     marginBottom: Spacing.base,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   formTitle: {
     fontSize: Typography.base,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: Spacing.base,
   },
   formRow: {
@@ -337,20 +341,20 @@ const styles = StyleSheet.create({
   label: {
     fontSize: Typography.xs,
     fontWeight: Typography.semibold,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: Spacing.xs,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   input: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.md,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.sm,
     fontSize: Typography.base,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: Spacing.md,
   },
   formActions: {
@@ -363,46 +367,46 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.md,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     alignItems: 'center',
   },
   cancelText: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   saveBtn: {
     flex: 2,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.md,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
   },
   saveBtnText: {
     fontSize: Typography.sm,
     fontWeight: Typography.bold,
-    color: Colors.surface,
+    color: colors.surface,
   },
   list: { marginTop: Spacing.sm },
   promoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.lg,
     padding: Spacing.base,
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   promoLeft: { flex: 1 },
   promoName: {
     fontSize: Typography.base,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   promoMarket: {
     fontSize: Typography.xs,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   expireBadge: {
@@ -423,13 +427,13 @@ const styles = StyleSheet.create({
   promoPrice: {
     fontSize: Typography.lg,
     fontWeight: Typography.extrabold,
-    color: Colors.primary,
+    color: colors.primary,
   },
   deletePromoBtn: {
     width: 32,
     height: 32,
     borderRadius: BorderRadius.md,
-    backgroundColor: Colors.dangerBg,
+    backgroundColor: colors.dangerBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -442,12 +446,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: Typography.lg,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   emptyText: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
   },

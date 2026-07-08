@@ -26,6 +26,7 @@ import {
 import { ShoppingSession, ProductMarketComparison } from '../types';
 import { logout } from '../services/authService';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { useAppColors, AppColors } from '../store/useThemeStore';
 
 type Tab = 'sessions' | 'prices' | 'markets';
 type NavProp = StackNavigationProp<RootStackParamList>;
@@ -34,6 +35,9 @@ export const HistoryScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const [activeTab, setActiveTab] = useState<Tab>('sessions');
   const [loading, setLoading] = useState(true);
+
+  const colors = useAppColors();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   // Sessions Tab State
   const [sessions, setSessions] = useState<ShoppingSession[]>([]);
@@ -143,13 +147,13 @@ export const HistoryScreen: React.FC = () => {
               <View
                 style={[
                   styles.badge,
-                  { backgroundColor: isWithinBudget ? Colors.primaryLight : '#FADBD8' },
+                  { backgroundColor: isWithinBudget ? colors.primaryLight : '#FADBD8' },
                 ]}
               >
                 <Text
                   style={[
                     styles.badgeText,
-                    { color: isWithinBudget ? Colors.primaryDark : Colors.danger },
+                    { color: isWithinBudget ? colors.primaryDark : colors.danger },
                   ]}
                 >
                   {isWithinBudget ? 'No orçamento' : 'Estourou'}
@@ -214,7 +218,7 @@ export const HistoryScreen: React.FC = () => {
         {isExpanded && (
           <View style={styles.cardExpanded}>
             {productHistory.length === 0 ? (
-              <ActivityIndicator size="small" color={Colors.primary} />
+              <ActivityIndicator size="small" color={colors.primary} />
             ) : (
               (() => {
                 const reversedHistory = [...productHistory].reverse();
@@ -233,7 +237,7 @@ export const HistoryScreen: React.FC = () => {
                           <Text
                             style={[
                               styles.historyDiff,
-                              { color: diff > 0 ? Colors.danger : Colors.success },
+                              { color: diff > 0 ? colors.danger : colors.success },
                             ]}
                           >
                             {diff > 0 ? '⬆' : '⬇'} {formatCurrency(Math.abs(diff))}
@@ -256,7 +260,7 @@ export const HistoryScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.primaryDark} />
+      <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -307,7 +311,7 @@ export const HistoryScreen: React.FC = () => {
       {/* Content */}
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
         <View style={styles.listContainer}>
@@ -462,10 +466,10 @@ export const HistoryScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   center: {
     flex: 1,
@@ -473,7 +477,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    backgroundColor: Colors.primaryDark,
+    backgroundColor: colors.primaryDark,
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: Spacing.xxxl,
@@ -488,14 +492,14 @@ const styles = StyleSheet.create({
   },
   backIcon: {
     fontSize: 24,
-    color: Colors.surface,
+    color: colors.surface,
     fontWeight: Typography.bold,
   },
   headerTitle: {
     flex: 1,
     fontSize: Typography.lg,
     fontWeight: Typography.extrabold,
-    color: Colors.surface,
+    color: colors.surface,
     textAlign: 'center',
   },
   headerRightActions: {
@@ -516,7 +520,7 @@ const styles = StyleSheet.create({
   },
   tabsWrapper: {
     flexDirection: 'row',
-    backgroundColor: Colors.primaryDark,
+    backgroundColor: colors.primaryDark,
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.sm,
   },
@@ -528,14 +532,14 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   tabActive: {
-    borderBottomColor: Colors.primary,
+    borderBottomColor: colors.primary,
   },
   tabText: {
     color: 'rgba(255,255,255,0.6)',
     fontWeight: Typography.bold,
   },
   tabTextActive: {
-    color: Colors.surface,
+    color: colors.surface,
   },
   listContainer: {
     flex: 1,
@@ -546,12 +550,12 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: 'center',
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginTop: Spacing.xl,
     fontSize: Typography.base,
   },
   chartContainer: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     padding: Spacing.xl,
     borderRadius: BorderRadius.xl,
     marginBottom: Spacing.lg,
@@ -560,7 +564,7 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: Typography.lg,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: Spacing.lg,
     textAlign: 'center',
   },
@@ -577,7 +581,7 @@ const styles = StyleSheet.create({
   chartBarBackground: {
     width: 24,
     height: 100,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.sm,
     justifyContent: 'flex-end',
     overflow: 'hidden',
@@ -585,20 +589,20 @@ const styles = StyleSheet.create({
   },
   chartBarFill: {
     width: '100%',
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: BorderRadius.sm,
   },
   chartBarLabel: {
     fontSize: Typography.xs,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   chartBarTotal: {
     fontSize: Typography.xs,
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
     fontWeight: Typography.bold,
   },
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.lg,
     marginBottom: Spacing.base,
     ...Shadow.sm,
@@ -615,7 +619,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: Typography.base,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   cardBadges: {
@@ -635,7 +639,7 @@ const styles = StyleSheet.create({
   },
   itemsCount: {
     fontSize: Typography.xs,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontWeight: Typography.medium,
   },
   cardTotalBox: {
@@ -643,13 +647,13 @@ const styles = StyleSheet.create({
   },
   cardTotalLabel: {
     fontSize: 10,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textTransform: 'uppercase',
   },
   cardTotalValue: {
     fontSize: Typography.lg,
     fontWeight: Typography.extrabold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   cardHeaderRow: {
     flexDirection: 'row',
@@ -675,14 +679,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   cardExpanded: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     padding: Spacing.base,
     borderTopWidth: 1,
-    borderTopColor: Colors.divider,
+    borderTopColor: colors.divider,
   },
   expandedTitle: {
     fontSize: Typography.xs,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontWeight: Typography.bold,
     textTransform: 'uppercase',
     marginBottom: Spacing.sm,
@@ -695,15 +699,15 @@ const styles = StyleSheet.create({
   cartItemName: {
     flex: 1,
     fontSize: Typography.sm,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   cartItemDetail: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   cartItemTotal: {
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   productHeader: {
     flexDirection: 'row',
@@ -714,11 +718,11 @@ const styles = StyleSheet.create({
   productTitle: {
     fontSize: Typography.base,
     fontWeight: Typography.semibold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     textTransform: 'capitalize',
   },
   productArrow: {
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontSize: Typography.xs,
   },
   historyRow: {
@@ -731,7 +735,7 @@ const styles = StyleSheet.create({
   },
   historyDate: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   historyPriceBox: {
     flexDirection: 'row',
@@ -745,17 +749,17 @@ const styles = StyleSheet.create({
   historyPrice: {
     fontSize: Typography.base,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: Colors.overlay,
+    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.xl,
   },
   modalContent: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.lg,
     padding: Spacing.xl,
     width: '100%',
@@ -765,12 +769,12 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: Typography.lg,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   modalText: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: Spacing.xl,
     lineHeight: 20,
   },
@@ -785,17 +789,17 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
   },
   modalCancelText: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.semibold,
   },
   modalConfirm: {
-    backgroundColor: Colors.danger,
+    backgroundColor: colors.danger,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.base,
     borderRadius: BorderRadius.md,
   },
   modalConfirmText: {
-    color: Colors.surface,
+    color: colors.surface,
     fontWeight: Typography.bold,
   },
   sessionMarket: {

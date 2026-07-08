@@ -22,6 +22,7 @@ import MarketItemModal from '../components/MarketItemModal';
 import BudgetAlertModal from '../components/BudgetAlertModal';
 import { getPriceVariation } from '../services/priceHistoryService';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { useAppColors, AppColors } from '../store/useThemeStore';
 
 type MarketNavProp = StackNavigationProp<RootStackParamList, 'MarketMode'>;
 
@@ -45,6 +46,9 @@ export const MarketModeScreen: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [loadingVariation, setLoadingVariation] = useState(false);
+
+  const colors = useAppColors();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   // Dispara alerta quando orçamento é estourado (apenas uma vez por sessão)
   useEffect(() => {
@@ -172,7 +176,7 @@ export const MarketModeScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -201,7 +205,7 @@ export const MarketModeScreen: React.FC = () => {
                 {renderSectionHeader(
                   categoryName,
                   catItems.length,
-                  Colors.warning
+                  colors.warning
                 )}
                 {catItems.map((item) => (
                   <ProductCard
@@ -217,7 +221,7 @@ export const MarketModeScreen: React.FC = () => {
             {/* No carrinho */}
             {cartItems.length > 0 && (
               <>
-                {renderSectionHeader('No carrinho', cartItems.length, Colors.primary)}
+                {renderSectionHeader('No carrinho', cartItems.length, colors.primary)}
                 {cartItems.map((item) => (
                   <ProductCard
                     key={item.id}
@@ -251,7 +255,7 @@ export const MarketModeScreen: React.FC = () => {
           <Text style={styles.footerLabel}>Total no carrinho</Text>
           <Text style={[
             styles.footerTotal,
-            status === 'exceeded' && { color: Colors.danger },
+            status === 'exceeded' && { color: colors.danger },
           ]}>
             {formatCurrency(totalSpent)}
           </Text>
@@ -289,20 +293,20 @@ export const MarketModeScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: Spacing.xxxl,
     paddingBottom: Spacing.base,
     paddingHorizontal: Spacing.base,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: colors.border,
   },
   backBtn: {
     width: 40,
@@ -312,14 +316,14 @@ const styles = StyleSheet.create({
   },
   backIcon: {
     fontSize: 24,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     fontWeight: Typography.bold,
   },
   headerTitle: {
     flex: 1,
     fontSize: Typography.lg,
     fontWeight: Typography.extrabold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     textAlign: 'center',
   },
   finalizeHeaderBtn: {
@@ -329,7 +333,7 @@ const styles = StyleSheet.create({
   finalizeHeaderText: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.primary,
+    color: colors.primary,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -348,15 +352,15 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   sectionCount: {
     fontSize: Typography.sm,
     fontWeight: Typography.bold,
-    color: Colors.textMuted,
-    backgroundColor: Colors.border,
+    color: colors.textMuted,
+    backgroundColor: colors.border,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: BorderRadius.full,
@@ -366,7 +370,7 @@ const styles = StyleSheet.create({
   },
   allDoneCard: {
     margin: Spacing.base,
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     borderRadius: BorderRadius.xl,
     padding: Spacing.xl,
     alignItems: 'center',
@@ -378,12 +382,12 @@ const styles = StyleSheet.create({
   allDoneTitle: {
     fontSize: Typography.lg,
     fontWeight: Typography.bold,
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
     marginBottom: Spacing.xs,
   },
   allDoneSubtitle: {
     fontSize: Typography.sm,
-    color: Colors.primary,
+    color: colors.primary,
     textAlign: 'center',
   },
   footer: {
@@ -391,12 +395,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.base,
     paddingBottom: Spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.base,
@@ -407,7 +411,7 @@ const styles = StyleSheet.create({
   },
   footerLabel: {
     fontSize: Typography.xs,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontWeight: Typography.medium,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
@@ -415,22 +419,22 @@ const styles = StyleSheet.create({
   footerTotal: {
     fontSize: Typography.xl,
     fontWeight: Typography.extrabold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   finalizeBtn: {
     flex: 1.5,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.base,
     alignItems: 'center',
   },
   finalizeBtnDanger: {
-    backgroundColor: Colors.danger,
+    backgroundColor: colors.danger,
   },
   finalizeText: {
     fontSize: Typography.base,
     fontWeight: Typography.bold,
-    color: Colors.surface,
+    color: colors.surface,
   },
 });
 

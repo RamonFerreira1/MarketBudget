@@ -18,6 +18,7 @@ import {
   ShoppingTemplate,
 } from '../services/templateService';
 import { ShoppingItem } from '../types';
+import { useAppColors, AppColors } from '../store/useThemeStore';
 
 interface TemplatesModalProps {
   visible: boolean;
@@ -37,6 +38,9 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({
   const [saving, setSaving] = useState(false);
   const [newName, setNewName] = useState('');
   const [showSaveForm, setShowSaveForm] = useState(false);
+
+  const colors = useAppColors();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     if (visible) {
@@ -144,7 +148,7 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({
                 <TextInput
                   style={styles.saveInput}
                   placeholder="Ex: Compra semanal"
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   value={newName}
                   onChangeText={setNewName}
                   autoFocus
@@ -155,7 +159,7 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({
                   disabled={!newName.trim() || saving}
                 >
                   {saving ? (
-                    <ActivityIndicator size="small" color={Colors.surface} />
+                    <ActivityIndicator size="small" color={colors.surface} />
                   ) : (
                     <Text style={styles.saveConfirmText}>Salvar</Text>
                   )}
@@ -174,7 +178,7 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({
           {loading ? (
             <ActivityIndicator
               size="large"
-              color={Colors.primary}
+              color={colors.primary}
               style={{ marginTop: Spacing.xl }}
             />
           ) : templates.length === 0 ? (
@@ -226,14 +230,14 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: Colors.overlay,
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: Spacing.xl,
@@ -244,7 +248,7 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: Colors.border,
+    backgroundColor: colors.border,
     borderRadius: BorderRadius.full,
     alignSelf: 'center',
     marginBottom: Spacing.lg,
@@ -258,39 +262,39 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Typography.xl,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   subtitle: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeIcon: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.bold,
   },
   saveCurrentBtn: {
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     borderRadius: BorderRadius.md,
     padding: Spacing.base,
     marginBottom: Spacing.base,
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
     borderStyle: 'dashed',
   },
   saveCurrentText: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
     textAlign: 'center',
   },
   saveForm: {
@@ -299,7 +303,7 @@ const styles = StyleSheet.create({
   saveFormLabel: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: Spacing.xs,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
@@ -311,17 +315,17 @@ const styles = StyleSheet.create({
   },
   saveInput: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.md,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.sm,
     fontSize: Typography.base,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   saveConfirmBtn: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.sm,
@@ -329,7 +333,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveConfirmText: {
-    color: Colors.surface,
+    color: colors.surface,
     fontWeight: Typography.bold,
     fontSize: Typography.sm,
   },
@@ -337,13 +341,13 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: BorderRadius.md,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
   saveCancelText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.bold,
   },
   list: {
@@ -352,12 +356,12 @@ const styles = StyleSheet.create({
   templateCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.lg,
     padding: Spacing.base,
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   templateInfo: {
     flex: 1,
@@ -366,17 +370,17 @@ const styles = StyleSheet.create({
   templateName: {
     fontSize: Typography.base,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   templateMeta: {
     fontSize: Typography.xs,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
     fontWeight: Typography.medium,
   },
   templateItems: {
     fontSize: Typography.xs,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 4,
     fontStyle: 'italic',
   },
@@ -386,13 +390,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadBtn: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
   },
   loadBtnText: {
-    color: Colors.surface,
+    color: colors.surface,
     fontSize: Typography.sm,
     fontWeight: Typography.bold,
   },
@@ -400,7 +404,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: BorderRadius.md,
-    backgroundColor: Colors.dangerBg,
+    backgroundColor: colors.dangerBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -418,12 +422,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: Typography.lg,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   emptyText: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
   },

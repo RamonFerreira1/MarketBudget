@@ -17,6 +17,7 @@ import {
   getUserSupermarkets,
   saveSupermarket,
 } from '../services/supermarketService';
+import { useAppColors, AppColors } from '../store/useThemeStore';
 
 interface Props {
   visible: boolean;
@@ -30,6 +31,9 @@ const SupermarketPicker: React.FC<Props> = ({ visible, onSelect, onClose }) => {
   const [newName, setNewName] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const colors = useAppColors();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     if (visible) {
@@ -88,7 +92,7 @@ const SupermarketPicker: React.FC<Props> = ({ visible, onSelect, onClose }) => {
 
           {loading ? (
             <ActivityIndicator
-              color={Colors.primary}
+              color={colors.primary}
               style={{ marginVertical: Spacing.xl }}
             />
           ) : (
@@ -132,7 +136,7 @@ const SupermarketPicker: React.FC<Props> = ({ visible, onSelect, onClose }) => {
                 <TextInput
                   style={styles.input}
                   placeholder="+ Novo mercado..."
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   value={newName}
                   onChangeText={setNewName}
                   maxLength={40}
@@ -146,7 +150,7 @@ const SupermarketPicker: React.FC<Props> = ({ visible, onSelect, onClose }) => {
                     disabled={saving}
                   >
                     {saving ? (
-                      <ActivityIndicator color={Colors.surface} size="small" />
+                      <ActivityIndicator color={colors.surface} size="small" />
                     ) : (
                       <Text style={styles.addBtnText}>Adicionar</Text>
                     )}
@@ -179,14 +183,14 @@ const SupermarketPicker: React.FC<Props> = ({ visible, onSelect, onClose }) => {
 
 export default SupermarketPicker;
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: Colors.overlay,
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: Spacing.xl,
@@ -197,7 +201,7 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: Colors.border,
+    backgroundColor: colors.border,
     borderRadius: BorderRadius.full,
     alignSelf: 'center',
     marginBottom: Spacing.lg,
@@ -205,12 +209,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Typography.xl,
     fontWeight: Typography.extrabold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   subtitle: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 20,
     marginBottom: Spacing.lg,
   },
@@ -227,22 +231,22 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.base,
     borderRadius: BorderRadius.lg,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     alignItems: 'center',
   },
   chipSelected: {
-    backgroundColor: Colors.primaryLight,
-    borderColor: Colors.primary,
+    backgroundColor: colors.primaryLight,
+    borderColor: colors.primary,
   },
   chipText: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   chipTextSelected: {
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
   },
   newRow: {
     flexDirection: 'row',
@@ -252,23 +256,23 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.lg,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.md,
     fontSize: Typography.base,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   addBtn: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: BorderRadius.lg,
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.md,
   },
   addBtnText: {
-    color: Colors.surface,
+    color: colors.surface,
     fontWeight: Typography.bold,
     fontSize: Typography.sm,
   },
@@ -276,21 +280,21 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   confirmBtn: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.base + 4,
     alignItems: 'center',
     ...Shadow.md,
   },
   confirmBtnDisabled: {
-    backgroundColor: '#A0D3B8',
+    backgroundColor: colors.primaryLight,
     elevation: 0,
     shadowOpacity: 0,
   },
   confirmText: {
     fontSize: Typography.md,
     fontWeight: Typography.extrabold,
-    color: Colors.surface,
+    color: colors.surface,
   },
   skipBtn: {
     paddingVertical: Spacing.sm,
@@ -298,7 +302,7 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontSize: Typography.sm,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontWeight: Typography.medium,
   },
 });

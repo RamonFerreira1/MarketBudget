@@ -19,6 +19,7 @@ import PriceTagBadge from '../components/PriceTagBadge';
 import { finalizeSession } from '../services/shoppingListService';
 import { savePriceRecord } from '../services/priceHistoryService';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { useAppColors, AppColors } from '../store/useThemeStore';
 
 type SummaryNavProp = StackNavigationProp<RootStackParamList, 'Summary'>;
 
@@ -34,6 +35,9 @@ export const SummaryScreen: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
+
+  const colors = useAppColors();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const cartItems = items.filter((i) => i.addedToCart);
   const skippedItems = items.filter((i) => !i.addedToCart);
@@ -115,12 +119,12 @@ export const SummaryScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.primaryDark} />
+      <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
 
       {/* Header */}
       <View style={[
         styles.header,
-        { backgroundColor: isWithinBudget ? Colors.primaryDark : '#C0392B' },
+        { backgroundColor: isWithinBudget ? colors.primaryDark : '#C0392B' },
       ]}>
         <Text style={styles.headerEmoji}>{isWithinBudget ? '✅' : '⚠️'}</Text>
         <Text style={styles.headerTitle}>
@@ -222,7 +226,7 @@ export const SummaryScreen: React.FC = () => {
             activeOpacity={0.85}
           >
             {saving ? (
-              <ActivityIndicator color={Colors.surface} />
+              <ActivityIndicator color={colors.surface} />
             ) : (
               <Text style={styles.saveText}>💾 Salvar e Finalizar</Text>
             )}
@@ -255,10 +259,10 @@ export const SummaryScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   header: {
     paddingTop: Spacing.xxxl + Spacing.base,
@@ -275,7 +279,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: Typography.xl,
     fontWeight: Typography.extrabold,
-    color: Colors.surface,
+    color: colors.surface,
     marginBottom: Spacing.xs,
   },
   headerDate: {
@@ -311,12 +315,12 @@ const styles = StyleSheet.create({
   valueFigure: {
     fontSize: Typography.base,
     fontWeight: Typography.extrabold,
-    color: Colors.surface,
+    color: colors.surface,
   },
   sectionTitle: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
     paddingHorizontal: Spacing.base,
@@ -331,9 +335,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
+    borderBottomColor: colors.divider,
   },
   summaryLeft: {
     flex: 1,
@@ -342,11 +346,11 @@ const styles = StyleSheet.create({
   summaryName: {
     fontSize: Typography.base,
     fontWeight: Typography.semibold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   summaryDetail: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   summaryRight: {
@@ -356,27 +360,27 @@ const styles = StyleSheet.create({
   summaryTotal: {
     fontSize: Typography.base,
     fontWeight: Typography.bold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   skippedSection: {
     margin: Spacing.base,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.lg,
     padding: Spacing.base,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   skippedTitle: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginBottom: Spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   skippedItem: {
     fontSize: Typography.sm,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginBottom: 2,
     textDecorationLine: 'line-through',
   },
@@ -385,12 +389,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.base,
     paddingBottom: Spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     gap: Spacing.sm,
     alignItems: 'center',
     ...Shadow.md,
@@ -402,7 +406,7 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     width: '100%',
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.base + 4,
     alignItems: 'center',
@@ -414,7 +418,7 @@ const styles = StyleSheet.create({
   saveText: {
     fontSize: Typography.md,
     fontWeight: Typography.extrabold,
-    color: Colors.surface,
+    color: colors.surface,
   },
   shareBtn: {
     flex: 1,
@@ -423,16 +427,16 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.base + 4,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
   },
   shareText: {
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
     fontSize: Typography.md,
     fontWeight: Typography.bold,
   },
   newBtn: {
     flex: 1,
-    backgroundColor: Colors.primaryDark,
+    backgroundColor: colors.primaryDark,
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.base + 4,
     alignItems: 'center',
@@ -440,16 +444,16 @@ const styles = StyleSheet.create({
   newText: {
     fontSize: Typography.md,
     fontWeight: Typography.extrabold,
-    color: Colors.surface,
+    color: colors.surface,
   },
   savedConfirmation: {
     fontSize: Typography.sm,
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: Typography.semibold,
   },
   errorBox: {
     width: '100%',
-    backgroundColor: Colors.dangerBg,
+    backgroundColor: colors.dangerBg,
     borderWidth: 1,
     borderColor: '#FECACA',
     borderRadius: BorderRadius.md,
@@ -470,7 +474,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   marketBadgeText: {
-    color: Colors.surface,
+    color: colors.surface,
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
   },
@@ -484,7 +488,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(16, 185, 129, 0.25)',
   },
   compareText: {
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
     fontSize: Typography.sm,
     fontWeight: Typography.bold,
   },

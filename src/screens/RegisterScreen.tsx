@@ -7,6 +7,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import { register } from '../services/authService';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { useAppColors, AppColors } from '../store/useThemeStore';
 
 type RegisterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Register'>;
 
@@ -38,6 +39,9 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  const colors = useAppColors();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const clearError = () => setErrorMsg('');
 
@@ -93,7 +97,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           <TextInput
             style={[styles.input, errorMsg ? styles.inputError : null]}
             placeholder="seu@email.com"
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             value={email}
             onChangeText={(t) => { setEmail(t); clearError(); }}
             keyboardType="email-address"
@@ -105,7 +109,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           <TextInput
             style={[styles.input, errorMsg ? styles.inputError : null]}
             placeholder="Mínimo 6 caracteres"
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             value={password}
             onChangeText={(t) => { setPassword(t); clearError(); }}
             secureTextEntry
@@ -119,7 +123,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               errorMsg ? styles.inputError : null,
             ]}
             placeholder="Repita a senha"
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             value={confirmPassword}
             onChangeText={(t) => { setConfirmPassword(t); clearError(); }}
             secureTextEntry
@@ -142,7 +146,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           ) : null}
 
           {loading ? (
-            <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: Spacing.lg }} />
+            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: Spacing.lg }} />
           ) : (
             <>
               <TouchableOpacity style={styles.primaryBtn} onPress={handleRegister} activeOpacity={0.85}>
@@ -167,10 +171,10 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.primaryDark,
+    backgroundColor: colors.primaryDark,
   },
   scroll: {
     flexGrow: 1,
@@ -190,7 +194,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
   },
   backBtnText: {
-    color: Colors.surface,
+    color: colors.surface,
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
   },
@@ -201,7 +205,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Typography.xxl,
     fontWeight: Typography.extrabold,
-    color: Colors.surface,
+    color: colors.surface,
     letterSpacing: -1,
   },
   subtitle: {
@@ -211,38 +215,38 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   form: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     padding: Spacing.xl,
     borderRadius: BorderRadius.xl,
     ...Shadow.lg,
   },
   label: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.bold,
     marginBottom: Spacing.xs,
   },
   input: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
     fontSize: Typography.md,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: Spacing.lg,
   },
   inputLast: {
     marginBottom: Spacing.md,
   },
   inputError: {
-    borderColor: Colors.danger,
-    backgroundColor: Colors.dangerBg,
+    borderColor: colors.danger,
+    backgroundColor: colors.dangerBg,
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: Colors.dangerBg,
+    backgroundColor: colors.dangerBg,
     borderWidth: 1,
     borderColor: '#FECACA',
     borderRadius: BorderRadius.md,
@@ -282,7 +286,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.medium,
   },
   primaryBtn: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
@@ -290,7 +294,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   primaryBtnText: {
-    color: Colors.surface,
+    color: colors.surface,
     fontSize: Typography.md,
     fontWeight: Typography.bold,
   },
@@ -300,10 +304,10 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: Typography.base,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   linkTextBold: {
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
     fontWeight: Typography.bold,
   },
 });

@@ -18,6 +18,7 @@ import { getUserSessions } from '../services/shoppingListService';
 import { getCurrentUserId } from '../services/authService';
 import { formatCurrency } from '../utils/formatters';
 import { ShoppingSession } from '../types';
+import { useAppColors, AppColors } from '../store/useThemeStore';
 
 const MONTHS_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
@@ -63,6 +64,9 @@ const DashboardScreen: React.FC = () => {
   const [goalInput, setGoalInput] = useState('');
   const [editingGoal, setEditingGoal] = useState(false);
   const [savingGoal, setSavingGoal] = useState(false);
+
+  const colors = useAppColors();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   useFocusEffect(
     useCallback(() => {
@@ -153,14 +157,14 @@ const DashboardScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.primaryDark} />
+      <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -239,9 +243,9 @@ const DashboardScreen: React.FC = () => {
               })}
             </View>
             <View style={styles.chartLegend}>
-              <View style={[styles.legendDot, { backgroundColor: Colors.primary }]} />
+              <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
               <Text style={styles.legendText}>Mês atual</Text>
-              <View style={[styles.legendDot, { backgroundColor: Colors.inactive, marginLeft: Spacing.base }]} />
+              <View style={[styles.legendDot, { backgroundColor: colors.inactive, marginLeft: Spacing.base }]} />
               <Text style={styles.legendText}>Meses anteriores</Text>
             </View>
           </View>
@@ -309,7 +313,7 @@ const DashboardScreen: React.FC = () => {
                       <TextInput
                         style={styles.goalInput}
                         placeholder="Ex: 500,00"
-                        placeholderTextColor={Colors.textMuted}
+                        placeholderTextColor={colors.textMuted}
                         value={goalInput}
                         onChangeText={setGoalInput}
                         keyboardType="decimal-pad"
@@ -321,7 +325,7 @@ const DashboardScreen: React.FC = () => {
                         disabled={savingGoal}
                       >
                         {savingGoal
-                          ? <ActivityIndicator size="small" color={Colors.surface} />
+                          ? <ActivityIndicator size="small" color={colors.surface} />
                           : <Text style={styles.goalSaveBtnText}>Salvar</Text>
                         }
                       </TouchableOpacity>
@@ -365,11 +369,11 @@ const DashboardScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   centered: { justifyContent: 'center', alignItems: 'center' },
   header: {
-    backgroundColor: Colors.primaryDark,
+    backgroundColor: colors.primaryDark,
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: Spacing.xxxl,
@@ -380,8 +384,8 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
   },
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 24, color: Colors.surface, fontWeight: Typography.bold },
-  headerTitle: { fontSize: Typography.lg, fontWeight: Typography.extrabold, color: Colors.surface },
+  backIcon: { fontSize: 24, color: colors.surface, fontWeight: Typography.bold },
+  headerTitle: { fontSize: Typography.lg, fontWeight: Typography.extrabold, color: colors.surface },
   headerSub: { fontSize: Typography.sm, color: 'rgba(255,255,255,0.7)', marginTop: 1 },
   scroll: { flex: 1 },
   scrollContent: { padding: Spacing.base, paddingBottom: 40, gap: Spacing.base },
@@ -389,31 +393,31 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Typography.base,
     fontWeight: Typography.bold,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   statsRow: { flexDirection: 'row', gap: Spacing.md },
   statCard: {
     flex: 1,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.xl,
     padding: Spacing.base,
     gap: 4,
     ...Shadow.sm,
   },
-  statLabel: { fontSize: Typography.xs, color: Colors.textMuted, fontWeight: Typography.medium },
-  statValue: { fontSize: Typography.xl, fontWeight: Typography.extrabold, color: Colors.textPrimary },
-  statNameValue: { fontSize: Typography.base, fontWeight: Typography.bold, color: Colors.textPrimary },
-  statSub: { fontSize: Typography.xs, color: Colors.textSecondary },
+  statLabel: { fontSize: Typography.xs, color: colors.textMuted, fontWeight: Typography.medium },
+  statValue: { fontSize: Typography.xl, fontWeight: Typography.extrabold, color: colors.textPrimary },
+  statNameValue: { fontSize: Typography.base, fontWeight: Typography.bold, color: colors.textPrimary },
+  statSub: { fontSize: Typography.xs, color: colors.textSecondary },
   trendBadge: { borderRadius: BorderRadius.sm, paddingHorizontal: Spacing.sm, paddingVertical: 2, alignSelf: 'flex-start', marginTop: 2 },
-  trendUp: { backgroundColor: Colors.dangerBg },
-  trendDown: { backgroundColor: Colors.primaryLight },
+  trendUp: { backgroundColor: colors.dangerBg },
+  trendDown: { backgroundColor: colors.primaryLight },
   trendText: { fontSize: 10, fontWeight: Typography.semibold },
-  trendTextUp: { color: Colors.danger },
-  trendTextDown: { color: Colors.primary },
+  trendTextUp: { color: colors.danger },
+  trendTextDown: { color: colors.primary },
   chartCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.xl,
     padding: Spacing.base,
     paddingTop: Spacing.xl,
@@ -427,78 +431,78 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
   },
   barGroup: { alignItems: 'center', gap: 4, flex: 1 },
-  barLabel: { fontSize: 9, color: Colors.textMuted, fontWeight: Typography.medium },
+  barLabel: { fontSize: 9, color: colors.textMuted, fontWeight: Typography.medium },
   bar: { width: 28, borderRadius: 6, minHeight: 4 },
-  barCurrent: { backgroundColor: Colors.primary },
-  barPast: { backgroundColor: Colors.inactive },
-  barMonthLabel: { fontSize: Typography.xs, color: Colors.textMuted, fontWeight: Typography.medium },
-  barMonthLabelCurrent: { color: Colors.primary, fontWeight: Typography.bold },
+  barCurrent: { backgroundColor: colors.primary },
+  barPast: { backgroundColor: colors.inactive },
+  barMonthLabel: { fontSize: Typography.xs, color: colors.textMuted, fontWeight: Typography.medium },
+  barMonthLabelCurrent: { color: colors.primary, fontWeight: Typography.bold },
   chartLegend: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: Spacing.base,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     gap: Spacing.xs,
   },
   legendDot: { width: 10, height: 10, borderRadius: 5 },
-  legendText: { fontSize: Typography.xs, color: Colors.textMuted },
+  legendText: { fontSize: Typography.xs, color: colors.textMuted },
   goalCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.xl,
     padding: Spacing.base,
     ...Shadow.sm,
   },
   goalInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.md },
   goalAmounts: { gap: 2 },
-  goalSpent: { fontSize: Typography.xl, fontWeight: Typography.extrabold, color: Colors.textPrimary },
-  goalOf: { fontSize: Typography.sm, color: Colors.textSecondary },
+  goalSpent: { fontSize: Typography.xl, fontWeight: Typography.extrabold, color: colors.textPrimary },
+  goalOf: { fontSize: Typography.sm, color: colors.textSecondary },
   editGoalBtn: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.sm,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
-  editGoalText: { fontSize: Typography.xs, color: Colors.textSecondary, fontWeight: Typography.semibold },
-  progressTrack: { height: 14, backgroundColor: Colors.background, borderRadius: BorderRadius.full, overflow: 'hidden', marginBottom: Spacing.sm },
+  editGoalText: { fontSize: Typography.xs, color: colors.textSecondary, fontWeight: Typography.semibold },
+  progressTrack: { height: 14, backgroundColor: colors.background, borderRadius: BorderRadius.full, overflow: 'hidden', marginBottom: Spacing.sm },
   progressFill: { height: '100%', borderRadius: BorderRadius.full },
-  progressOk: { backgroundColor: Colors.primary },
-  progressExceeded: { backgroundColor: Colors.danger },
+  progressOk: { backgroundColor: colors.primary },
+  progressExceeded: { backgroundColor: colors.danger },
   goalFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  goalSavedText: { fontSize: Typography.xs, color: Colors.primary, fontWeight: Typography.semibold },
-  goalExceededText: { fontSize: Typography.xs, color: Colors.danger, fontWeight: Typography.semibold },
-  goalPct: { fontSize: Typography.sm, fontWeight: Typography.bold, color: Colors.textSecondary },
+  goalSavedText: { fontSize: Typography.xs, color: colors.primary, fontWeight: Typography.semibold },
+  goalExceededText: { fontSize: Typography.xs, color: colors.danger, fontWeight: Typography.semibold },
+  goalPct: { fontSize: Typography.sm, fontWeight: Typography.bold, color: colors.textSecondary },
   goalSetup: { alignItems: 'center', gap: Spacing.base },
-  goalEmptyText: { fontSize: Typography.sm, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
-  setGoalBtn: { backgroundColor: Colors.primary, borderRadius: BorderRadius.lg, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.sm },
-  setGoalBtnText: { fontSize: Typography.base, fontWeight: Typography.bold, color: Colors.surface },
-  goalInputLabel: { fontSize: Typography.sm, fontWeight: Typography.semibold, color: Colors.textSecondary, alignSelf: 'flex-start' },
+  goalEmptyText: { fontSize: Typography.sm, color: colors.textSecondary, textAlign: 'center', lineHeight: 20 },
+  setGoalBtn: { backgroundColor: colors.primary, borderRadius: BorderRadius.lg, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.sm },
+  setGoalBtnText: { fontSize: Typography.base, fontWeight: Typography.bold, color: colors.surface },
+  goalInputLabel: { fontSize: Typography.sm, fontWeight: Typography.semibold, color: colors.textSecondary, alignSelf: 'flex-start' },
   goalInputRow: { flexDirection: 'row', gap: Spacing.sm, width: '100%' },
   goalInput: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.md,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.sm,
     fontSize: Typography.base,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
-  goalSaveBtn: { backgroundColor: Colors.primary, borderRadius: BorderRadius.md, paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, minWidth: 70, alignItems: 'center' },
-  goalSaveBtnText: { color: Colors.surface, fontWeight: Typography.bold, fontSize: Typography.sm },
-  goalCancelBtn: { width: 36, height: 36, borderRadius: BorderRadius.md, backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center' },
-  goalCancelText: { fontSize: 14, color: Colors.textSecondary, fontWeight: Typography.bold },
+  goalSaveBtn: { backgroundColor: colors.primary, borderRadius: BorderRadius.md, paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, minWidth: 70, alignItems: 'center' },
+  goalSaveBtnText: { color: colors.surface, fontWeight: Typography.bold, fontSize: Typography.sm },
+  goalCancelBtn: { width: 36, height: 36, borderRadius: BorderRadius.md, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' },
+  goalCancelText: { fontSize: 14, color: colors.textSecondary, fontWeight: Typography.bold },
   historyRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  historyMonth: { width: 32, fontSize: Typography.xs, fontWeight: Typography.semibold, color: Colors.textSecondary },
-  historyBarTrack: { flex: 1, height: 10, backgroundColor: Colors.border, borderRadius: BorderRadius.full, overflow: 'hidden' },
+  historyMonth: { width: 32, fontSize: Typography.xs, fontWeight: Typography.semibold, color: colors.textSecondary },
+  historyBarTrack: { flex: 1, height: 10, backgroundColor: colors.border, borderRadius: BorderRadius.full, overflow: 'hidden' },
   historyBarFill: { height: '100%', borderRadius: BorderRadius.full },
-  historyBarCurrent: { backgroundColor: Colors.primary },
-  historyBarPast: { backgroundColor: Colors.inactive },
-  historyAmount: { width: 72, fontSize: Typography.xs, fontWeight: Typography.semibold, color: Colors.textPrimary, textAlign: 'right' },
+  historyBarCurrent: { backgroundColor: colors.primary },
+  historyBarPast: { backgroundColor: colors.inactive },
+  historyAmount: { width: 72, fontSize: Typography.xs, fontWeight: Typography.semibold, color: colors.textPrimary, textAlign: 'right' },
 });
 
 export default DashboardScreen;

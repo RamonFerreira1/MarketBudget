@@ -11,6 +11,7 @@ import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import { formatCurrency } from '../utils/formatters';
 import PriceTagBadge from './PriceTagBadge';
 import { getCategoryMeta } from '../constants/categories';
+import { useAppColors, AppColors } from '../store/useThemeStore';
 
 interface ProductCardProps {
   item: ShoppingItem;
@@ -26,6 +27,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onRemove,
 }) => {
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
+  const colors = useAppColors();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const handlePress = () => {
     Animated.sequence([
@@ -39,8 +42,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const isInCart = item.addedToCart;
   const hasPrice = item.unitPrice !== null;
 
-  const cardBorderColor = isInCart ? Colors.primary : Colors.border;
-  const cardBg = isInCart ? Colors.primaryLight : Colors.surface;
+  const cardBorderColor = isInCart ? colors.primary : colors.border;
+  const cardBg = isInCart ? colors.primaryLight : colors.surface;
 
   // Ícone e cor de categoria
   const catMeta = getCategoryMeta(item.category);
@@ -64,10 +67,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             styles.statusBar,
             {
               backgroundColor: isInCart
-                ? Colors.primary
+                ? colors.primary
                 : mode === 'in-market'
-                ? Colors.warning
-                : Colors.inactive,
+                ? colors.warning
+                : colors.inactive,
             },
           ]}
         />
@@ -180,8 +183,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   );
 };
 
-
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   card: {
     flexDirection: 'row',
     borderRadius: BorderRadius.lg,
@@ -226,11 +228,11 @@ const styles = StyleSheet.create({
   name: {
     fontSize: Typography.base,
     fontWeight: Typography.semibold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   category: {
     fontSize: Typography.xs,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 1,
   },
   bottomRow: {
@@ -239,7 +241,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   infoChip: {
-    backgroundColor: Colors.divider,
+    backgroundColor: colors.divider,
     borderRadius: BorderRadius.sm,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
@@ -247,12 +249,12 @@ const styles = StyleSheet.create({
     minWidth: 56,
   },
   totalChip: {
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     flex: 1,
   },
   infoLabel: {
     fontSize: 10,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontWeight: Typography.medium,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
@@ -260,25 +262,25 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginTop: 1,
   },
   totalValue: {
     fontSize: Typography.sm,
     fontWeight: Typography.bold,
-    color: Colors.primary,
+    color: colors.primary,
     marginTop: 1,
   },
   priceTooltip: {
     fontSize: 11,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: Spacing.xs,
     fontStyle: 'italic',
   },
   hintBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     padding: Spacing.sm,
     borderRadius: BorderRadius.sm,
     marginTop: Spacing.sm,
@@ -290,7 +292,7 @@ const styles = StyleSheet.create({
   hintText: {
     flex: 1,
     fontSize: Typography.xs,
-    color: Colors.primaryDark,
+    color: colors.primaryDark,
     fontWeight: Typography.semibold,
   },
   removeBtn: {
@@ -300,13 +302,13 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.border,
+    backgroundColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   removeIcon: {
     fontSize: 10,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.bold,
   },
   checkMark: {
@@ -316,13 +318,13 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkIcon: {
     fontSize: 13,
-    color: Colors.surface,
+    color: colors.surface,
     fontWeight: Typography.bold,
   },
 });
