@@ -16,7 +16,7 @@ export async function generateShoppingList(prompt: string): Promise<AIProductSug
     throw new Error('Chave de API do Gemini não configurada (EXPO_PUBLIC_GEMINI_API_KEY).');
   }
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
 
   const systemPrompt = `Você é um assistente especialista em supermercado. 
 Aja como um gerador de listas de compras em formato JSON.
