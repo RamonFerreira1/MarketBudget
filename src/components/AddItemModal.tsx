@@ -15,6 +15,8 @@ import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import { CATEGORIES, getCategoryMeta } from '../constants/categories';
 import { getFavorites, toggleFavorite } from '../services/favoritesService';
 import { useAppColors, AppColors } from '../store/useThemeStore';
+import BarcodeScannerModal from './BarcodeScannerModal';
+import { BarcodeProductInfo } from '../services/barcodeService';
 
 interface AddItemModalProps {
   visible: boolean;
@@ -37,6 +39,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   const [loadingFavs, setLoadingFavs] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
   const [togglingFav, setTogglingFav] = useState(false);
+  const [scannerVisible, setScannerVisible] = useState(false);
 
   const colors = useAppColors();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
@@ -82,6 +85,17 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   const handlePickFavorite = (favName: string) => {
     setName(favName);
     setShowFavorites(false);
+  };
+
+  const handleProductScanned = (product: BarcodeProductInfo) => {
+    setName(product.name);
+    // Tenta adivinhar a categoria (bem rudimentar, mas ajuda)
+    const lname = product.name.toLowerCase();
+    if (lname.includes('leite') || lname.includes('queijo')) setCategory('Laticínios');
+    else if (lname.includes('carne') || lname.includes('frango')) setCategory('Açougue');
+    else if (lname.includes('pão') || lname.includes('bolo')) setCategory('Padaria');
+    else if (lname.includes('sabão') || lname.includes('detergente')) setCategory('Limpeza');
+    else setCategory('Outros');
   };
 
   return (
@@ -141,6 +155,12 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
               autoFocus={!showFavorites}
               returnKeyType="next"
             />
+            <TouchableOpacity
+              style={styles.scanBtn}
+              onPress={() => setScannerVisible(true)}
+            >
+              <Text style={styles.scanBtnIcon}>📷</Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={[styles.favBtn, isCurrentFavorite && styles.favBtnActive]}
               onPress={handleToggleFavorite}
@@ -218,6 +238,12 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <BarcodeScannerModal
+        visible={scannerVisible}
+        onClose={() => setScannerVisible(false)}
+        onProductFound={handleProductScanned}
+      />
     </Modal>
   );
 };
@@ -319,6 +345,17 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
     flex: 1,
     marginBottom: 0,
   },
+  scanBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.md,
+    backgroundColor: colors.background,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scanBtnIcon: { fontSize: 20 },
   favBtn: {
     width: 44,
     height: 44,

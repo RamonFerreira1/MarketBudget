@@ -18,8 +18,11 @@ import { formatCurrency, formatDate } from '../utils/formatters';
 import PriceTagBadge from '../components/PriceTagBadge';
 import { finalizeSession } from '../services/shoppingListService';
 import { savePriceRecord } from '../services/priceHistoryService';
+import { saveGlobalPriceRecord } from '../services/globalPriceService';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useAppColors, AppColors } from '../store/useThemeStore';
+import { evaluateSessionForBadges, Badge } from '../services/gamificationService';
+import BadgeModal from '../components/BadgeModal';
 
 type SummaryNavProp = StackNavigationProp<RootStackParamList, 'Summary'>;
 
@@ -35,6 +38,9 @@ export const SummaryScreen: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
+  
+  const [unlockedBadges, setUnlockedBadges] = useState<Badge[]>([]);
+  const [badgeModalVisible, setBadgeModalVisible] = useState(false);
 
   const colors = useAppColors();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
@@ -73,18 +79,28 @@ export const SummaryScreen: React.FC = () => {
 
       await finalizeSession(finalSession);
 
-      // Salva histórico de preços para cada item comprado
       const pricePromises = cartItems
         .filter((i) => i.unitPrice !== null)
-        .map((item) =>
-          savePriceRecord(item.name, {
+        .flatMap((item) => {
+          const params = {
             unitPrice: item.unitPrice!,
             sessionId,
             supermarketId: session?.supermarketId,
             supermarketName: session?.supermarketName,
-          })
-        );
+          };
+          return [
+            savePriceRecord(item.name, params),
+            saveGlobalPriceRecord(item.name, params)
+          ];
+        });
       await Promise.allSettled(pricePromises);
+
+      // Avalia conquistas do usuário
+      const newBadges = await evaluateSessionForBadges(finalSession);
+      if (newBadges.length > 0) {
+        setUnlockedBadges(newBadges);
+        setBadgeModalVisible(true);
+      }
 
       setSaved(true);
     } catch (error: any) {
@@ -255,6 +271,12 @@ export const SummaryScreen: React.FC = () => {
           </Text>
         )}
       </View>
+
+      <BadgeModal 
+        visible={badgeModalVisible} 
+        badges={unlockedBadges} 
+        onClose={() => setBadgeModalVisible(false)} 
+      />
     </View>
   );
 };

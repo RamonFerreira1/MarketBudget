@@ -15,6 +15,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import { getUserSessions } from '../services/shoppingListService';
+import { getUserBadges, Badge } from '../services/gamificationService';
 import { getCurrentUserId } from '../services/authService';
 import { formatCurrency } from '../utils/formatters';
 import { ShoppingSession } from '../types';
@@ -60,6 +61,7 @@ const DashboardScreen: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState<ShoppingSession[]>([]);
+  const [badges, setBadges] = useState<Badge[]>([]);
   const [monthlyGoal, setMonthlyGoal] = useState(0);
   const [goalInput, setGoalInput] = useState('');
   const [editingGoal, setEditingGoal] = useState(false);
@@ -73,10 +75,11 @@ const DashboardScreen: React.FC = () => {
       let active = true;
       const load = async () => {
         setLoading(true);
-        const [s, g] = await Promise.all([getUserSessions(), loadMonthlyGoal()]);
+        const [s, g, b] = await Promise.all([getUserSessions(), loadMonthlyGoal(), getUserBadges()]);
         if (!active) return;
         setSessions(s.filter((x) => x.status === 'completed'));
         setMonthlyGoal(g);
+        setBadges(b);
         setGoalInput(g > 0 ? String(g) : '');
         setLoading(false);
       };
@@ -364,6 +367,32 @@ const DashboardScreen: React.FC = () => {
             ))}
           </View>
         )}
+
+        {/* Gamificação: Conquistas */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>🏆 Minhas Conquistas</Text>
+          <View style={styles.badgesContainer}>
+            {badges.map((badge) => (
+              <View key={badge.id} style={[styles.badgeCard, !badge.isUnlocked && styles.badgeLocked]}>
+                <View style={[styles.badgeIconBox, !badge.isUnlocked && styles.badgeIconBoxLocked]}>
+                  <Text style={[styles.badgeIcon, !badge.isUnlocked && { opacity: 0.3 }]}>
+                    {badge.isUnlocked ? badge.icon : '🔒'}
+                  </Text>
+                </View>
+                <View style={styles.badgeInfo}>
+                  <Text style={[styles.badgeName, !badge.isUnlocked && styles.badgeTextLocked]}>{badge.name}</Text>
+                  <Text style={styles.badgeDesc} numberOfLines={2}>{badge.description}</Text>
+                  {badge.maxProgress && !badge.isUnlocked && (
+                    <Text style={styles.badgeProgressText}>
+                      Progresso: {badge.progress ?? 0} / {badge.maxProgress}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+
       </ScrollView>
     </View>
   );
@@ -503,6 +532,32 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   historyBarCurrent: { backgroundColor: colors.primary },
   historyBarPast: { backgroundColor: colors.inactive },
   historyAmount: { width: 72, fontSize: Typography.xs, fontWeight: Typography.semibold, color: colors.textPrimary, textAlign: 'right' },
+  badgesContainer: { gap: Spacing.sm },
+  badgeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    padding: Spacing.base,
+    borderRadius: BorderRadius.lg,
+    ...Shadow.sm,
+  },
+  badgeLocked: { backgroundColor: 'rgba(255,255,255,0.5)', opacity: 0.8 },
+  badgeIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFBEB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
+  },
+  badgeIconBoxLocked: { backgroundColor: colors.background },
+  badgeIcon: { fontSize: 24 },
+  badgeInfo: { flex: 1, gap: 2 },
+  badgeName: { fontSize: Typography.sm, fontWeight: Typography.bold, color: '#92400E' },
+  badgeTextLocked: { color: colors.textSecondary },
+  badgeDesc: { fontSize: 11, color: colors.textSecondary, lineHeight: 14 },
+  badgeProgressText: { fontSize: 10, fontWeight: Typography.semibold, color: colors.primary, marginTop: 4 },
 });
 
 export default DashboardScreen;

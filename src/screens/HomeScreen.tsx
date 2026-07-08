@@ -25,6 +25,7 @@ import { checkPriceAlerts, checkShoppingReminder, PriceAlert } from '../services
 import { getFavorites } from '../services/favoritesService';
 import { getActivePromotions } from '../services/promotionService';
 import { useThemeStore, AppColors } from '../store/useThemeStore';
+import { startGeofencing } from '../services/locationService';
 
 type HomeNavProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -68,6 +69,18 @@ export const HomeScreen: React.FC = () => {
           }
         } catch { /* silencioso */ }
         if (active) setAlertsLoading(false);
+
+        // Inicia geofencing (exemplo com uma coordenada genérica, pode ser expandido depois)
+        startGeofencing([
+          {
+            identifier: 'mercado-exemplo',
+            latitude: -23.5505, // São Paulo, SP
+            longitude: -46.6333,
+            radius: 500, // 500 metros
+            notifyOnEnter: true,
+            notifyOnExit: false,
+          }
+        ]);
       };
       loadAlerts();
       return () => { active = false; };
@@ -268,6 +281,20 @@ export const HomeScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Feature Actions */}
+        <View style={styles.featureRow}>
+          <TouchableOpacity
+            style={[styles.featureBtn, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}
+            onPress={() => navigation.navigate('GlobalPrices')}
+          >
+            <Text style={styles.featureBtnIcon}>🌍</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.featureBtnTitle, { color: colors.primaryDark }]}>Waze de Preços</Text>
+              <Text style={[styles.featureBtnSub, { color: colors.primary }]}>Preços da comunidade</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+
         {/* Dicas */}
         <View style={[styles.tipsCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.tipsTitle, { color: colors.textPrimary }]}>💡 Como funciona</Text>
@@ -460,6 +487,19 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
     justifyContent: 'center',
   },
   navBadgeText: { fontSize: 10, fontWeight: Typography.bold, color: colors.surface },
+  featureRow: { flexDirection: 'row', gap: Spacing.sm },
+  featureBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.base,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    gap: Spacing.sm,
+  },
+  featureBtnIcon: { fontSize: 28 },
+  featureBtnTitle: { fontSize: Typography.sm, fontWeight: Typography.extrabold },
+  featureBtnSub: { fontSize: 10, fontWeight: Typography.semibold, marginTop: 2 },
   tipsCard: {
     borderRadius: BorderRadius.xl,
     padding: Spacing.xl,

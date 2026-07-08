@@ -30,6 +30,22 @@
       "display": "standalone",
       "dir": "ltr",
       "lang": "pt-BR"
-    }
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "O MarketBudget precisa acessar sua câmera para ler códigos de barras de produtos."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "O MarketBudget usa sua localização em segundo plano para avisar quando você estiver perto de um mercado salvo.",
+          "locationWhenInUsePermission": "O MarketBudget usa sua localização para encontrar mercados próximos.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ]
+    ]
   }
 }

@@ -21,6 +21,7 @@ import { formatCurrency } from '../utils/formatters';
 import ProductCard from '../components/ProductCard';
 import AddItemModal from '../components/AddItemModal';
 import TemplatesModal from '../components/TemplatesModal';
+import AIAssistantModal from '../components/AIAssistantModal';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { getFavorites } from '../services/favoritesService';
 import { getActivePromotions, Promotion } from '../services/promotionService';
@@ -42,6 +43,7 @@ export const PreListScreen: React.FC = () => {
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [editingItem, setEditingItem] = useState<ShoppingItem | null>(null);
   const [templatesVisible, setTemplatesVisible] = useState(false);
+  const [aiVisible, setAiVisible] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -90,6 +92,12 @@ export const PreListScreen: React.FC = () => {
       if (!existing.has(ti.name.toLowerCase())) {
         addItem({ name: ti.name, category: ti.category, plannedQty: ti.plannedQty });
       }
+    }
+  };
+
+  const handleAddAiItems = (aiItems: {name: string, category: string, quantity: number}[]) => {
+    for (const item of aiItems) {
+      addItem({ name: item.name, category: item.category, plannedQty: item.quantity });
     }
   };
 
@@ -142,6 +150,12 @@ export const PreListScreen: React.FC = () => {
           <Text style={styles.headerTitle}>Lista de Compras</Text>
           <Text style={styles.headerSub}>Orçamento: {formatCurrency(budget)}</Text>
         </View>
+        <TouchableOpacity
+          style={styles.templateBtn}
+          onPress={() => setAiVisible(true)}
+        >
+          <Text style={styles.templateBtnText}>✨</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.templateBtn}
           onPress={() => setTemplatesVisible(true)}
@@ -267,6 +281,13 @@ export const PreListScreen: React.FC = () => {
         currentItems={items}
         onLoadTemplate={handleLoadTemplate}
       />
+
+      {/* Assistente IA */}
+      <AIAssistantModal 
+        visible={aiVisible} 
+        onClose={() => setAiVisible(false)} 
+        onAddItems={handleAddAiItems} 
+      />
     </View>
   );
 };
@@ -295,6 +316,7 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: Spacing.xs,
   },
   templateBtnText: { fontSize: 20 },
   countBadge: {
